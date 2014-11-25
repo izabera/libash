@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 
 : << :
-progress bar
-------------
+progress bars
+-------------
 
 usage:
 
-printbar "0" "$max"
+colorbar "0" "$max"
 for (( i=0; i<max; i++ )) ; do
   wget -q "$url/$i.png"
-  printbar $((i+1)) "$max"
+  colorbar $((i+1)) "$max"
 done
+
+the second one was my attempt at a progress bar in as few characters as possible
+works like the first one
 :
 
-function printbar () {
+colorbar () {
   local value="$1"
   local total="$2"
   local i=0
@@ -31,4 +34,6 @@ function printbar () {
   [[ -n $3 ]] && printf -- " - %s" "$3"
   [[ $1 != $2 ]] && printf "\r" || echo
 }
+
+bwbar()(b=[;for i in {1..9};do((i>$1*9/$2))&&b+=-||b+=#;done;(($1==$2))&&echo $b]||printf "$b]\r";)
 

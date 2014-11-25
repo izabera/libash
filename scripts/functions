@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+: << :
+usage: mkdirc a/b/c/d/e/f
+:
+
+mkdirc () {
+  if [ -z "$1" ] || [ -n "$2" ]; then
+    echo "Usage: $0 directory"
+    return 1
+  else
+    mkdir -p "$1"
+    cd "$1"
+  fi
+}
+
+: << :
+go up and destroy temp directories
+:
+
+uprm () {
+  temp=$(basename $PWD)
+  cd .. && rm -rf "$temp"
+}
