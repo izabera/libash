@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+: << :
+progress bar
+------------
+
+usage:
+
+printbar "0" "$max"
+for (( i=0; i<max; i++ )) ; do
+  wget -q "$url/$i.png"
+  printbar $((i+1)) "$max"
+done
+:
+
+function printbar () {
+  local value="$1"
+  local total="$2"
+  local i=0
+  printf "["
+  for (( ; i<10; i++ )); do
+    if (( i >= (value*10)/total )); then
+      tput setab 1    #red
+    else
+      tput setab 2    #green
+    fi
+    printf " "
+  done
+  tput sgr0
+  printf "] Progress: %d/%d" "$value" "$total"
+  [[ -n $3 ]] && printf -- " - %s" "$3"
+  [[ $1 != $2 ]] && printf "\r" || echo
+}
+
