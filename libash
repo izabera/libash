@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+mkdir -p /tmp/libash
+
 shopt -s extglob
 for file in "$LIBASHDIR/scripts/"!(magicalias) ; do
   source "$file"

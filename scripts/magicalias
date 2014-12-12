@@ -51,11 +51,11 @@ mispipe-helper () {
     # also, you can't retrieve the values one at a time
     # so i save them in a tmp file
     # (it's not so bad, provided you don't actually write to /tmp/pipestatus in that pipeline)
-    secondpart='printf %d\\n ${PIPESTATUS[@]} > /tmp/pipestatus'
+    secondpart='printf %d\\n ${PIPESTATUS[@]} > /tmp/libash/pipestatus'
     command=$command$'\n'$secondpart
     eval "$command"
     status=()
-    mapfile -t status < /tmp/pipestatus
+    mapfile -t status < /tmp/libash/pipestatus
     [[ ${status[$num]} ]] && return ${status[$num]} || return ${status[-1]}
   }
 }
