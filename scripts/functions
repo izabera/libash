@@ -41,6 +41,7 @@ isempty () (
 )
 
 # usage: haschanged [-p] file [file...]
+# -p option is for a parsable output
 
 haschanged () {
   local parsable=false
@@ -77,3 +78,27 @@ haschanged () {
     shift
   done
 }
+
+# usage: resolvepath .././path/./to/../from/../to/./file
+# prints /absolute/path/to/file
+# returns 0 if that file exists
+# TODO: issues with symlinks
+
+resolvepath () {
+  (($# != 1)) && return 2
+  [[ $1 ]] || return 3
+  local path=$1
+  [[ ${path::1} != / ]] && path="$PWD/$path"
+  # add an extra / to be removed later on, to help with paths like /path/to/file/..
+  path="$path/"
+  while [[ $path = *//* || $path = */./* || $path = */../* ]] ; do
+    path=${path//\/.\//\/}              # /foo/./       -> /foo/
+    path=${path//\/\//\/}               # /foo//bar/    -> /foo/bar/
+    path=${path/#\/..\//\/}             # /../foo/      -> /foo/
+    path=${path/\/+([!\/])\/..\//\/}    # /foo/bar/../  -> /foo/
+  done
+  [[ $path = / ]] || path="${path%/}"
+  printf %s\\n "$path"
+  test -e "$path"
+}
+
