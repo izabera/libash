@@ -17,8 +17,8 @@ works like the first one
 :
 
 colorbar () {
-  local value="$1"
-  local total="$2"
+  local value=$1
+  local total=$2
   local i=0
   printf "["
   for (( ; i<10; i++ )); do
@@ -31,8 +31,8 @@ colorbar () {
   done
   tput sgr0
   printf "] Progress: %d/%d" "$value" "$total"
-  [[ -n $3 ]] && printf -- " - %s" "$3"
-  [[ $1 != $2 ]] && printf "\r" || echo
+  [[ $3 ]] && printf -- " - %s" "$3"
+  [[ $1 != "$2" ]] && printf "\r" || echo
 }
 
 bwbar()(b=[;for i in {1..9};do((i>$1*9/$2))&&b+=-||b+=#;done;(($1==$2))&&echo $b]||printf "$b]\r";)

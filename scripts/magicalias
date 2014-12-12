@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# warning:
+# the following are horrible hacks, not recommended for any use
+# yadda yadda yadda
+
+# they only work in interactive shells and most of them can and _will_
+# break if you use a custom history format
+
+# the basic idea behind these aliases is found at
+# http://www.chiark.greenend.org.uk/~sgtatham/aliases.html
+
+aringa-helper () {
+  history 1 | {
+    read _ _ command
+    dir=${PWD/#"$HOME"/\~\/} dir=${dir/\/}
+    {
+      printf '%s@%s %s $ %s\n' "$USER" "$HOSTNAME" "$dir" "$command"
+      eval "$command"
+      printf '\n------------ exit code %d ------------\n' $? 
+    } |& tee >(curl -sF 'aringa=<-' arin.ga | xclip)
+  }
+}
+alias caringa='aringa-helper #'
+
+
+chronic-helper () {
+  history 1 | {
+    read _ _ command
+    file=$(mktemp)
+    if ! eval "$command" &> "$file" ; then cat "$file" ; fi
+    rm "$file"
+  }
+}
+alias chronic='chronic-helper #'
+
+mispipe-helper () {
+  history 1 | {
+    read _ _ command
+    num=0
+    read num subcommand <<< "$command"
+    if [[ $num != *[!0-9]* ]] ; then
+      command=$subcommand
+    else
+      num=0
+    fi
+    # note to self on PIPESTATUS:
+    # eval 'pipeline'  won't put the values in PIPESTATUS 
+    # also, you can't retrieve the values one at a time
+    # so i save them in a tmp file
+    # (it's not so bad, provided you don't actually write to /tmp/pipestatus in that pipeline)
+    secondpart='printf %d\\n ${PIPESTATUS[@]} > /tmp/pipestatus'
+    command=$command$'\n'$secondpart
+    eval "$command"
+    status=()
+    mapfile -t status < /tmp/pipestatus
+    [[ ${status[$num]} ]] && return ${status[$num]} || return $?
+  }
+}
+alias mispipe='mispipe-helper #'
+

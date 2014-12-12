@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# replicas of moreutils
+
+sponge() {
+  local file=$(mktemp) && \
+  cat > "$file" && \
+  cat "$file" > "$1" && \
+  rm "$file"
+}
+

@@ -3,3 +3,6 @@
 for file in scripts/* ; do
   source "$file"
 done
+
+[[ $- = *i* ]] && source scripts/magicalias
+
