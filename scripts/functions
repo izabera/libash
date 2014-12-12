@@ -22,3 +22,12 @@ uprm () {
   temp=$(basename $PWD)
   cd .. && rm -rf "$temp"
 }
+
+: << :
+backup your files easily
+:
+
+backup () {
+  for file ; do cp "$file" "/backup/$(date +%Y-%m-%d-%H-%M-%S-)${file##*/}" ; done
+}
+

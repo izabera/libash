@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-for file in scripts/* ; do
+for file in "$LIBASHDIR/scripts/"* ; do
   source "$file"
 done
 
-[[ $- = *i* ]] && source scripts/magicalias
+[[ $- = *i* ]] && source "$LIBASHDIR/scripts/magicalias"
 

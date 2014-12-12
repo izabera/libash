@@ -54,7 +54,7 @@ mispipe-helper () {
     eval "$command"
     status=()
     mapfile -t status < /tmp/pipestatus
-    [[ ${status[$num]} ]] && return ${status[$num]} || return $?
+    [[ ${status[$num]} ]] && return ${status[$num]} || return ${status[-1]}
   }
 }
 alias mispipe='mispipe-helper #'
