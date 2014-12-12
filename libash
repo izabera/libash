@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-for file in "$LIBASHDIR/scripts/"* ; do
+shopt -s extglob
+for file in "$LIBASHDIR/scripts/"!(magicalias) ; do
   source "$file"
 done
 

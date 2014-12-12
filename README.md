@@ -5,10 +5,15 @@ Collection of scripts that will make your bash experience much more pleasant.
 
 
 
-Usage
------
+Installation
+------------
 
-Simply clone this repo, and source `libash` in your `.bashrc`.
+Simply clone this repo, and add this to your `.bashrc`.
+
+```
+export LIBASHDIR="/your/path/here"
+source "$LIBASHDIR/libash"
+```
 
 
 

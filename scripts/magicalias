@@ -32,6 +32,8 @@ chronic-helper () {
     rm "$file"
   }
 }
+# this doesn't really work if your program writes to /dev/tty or similar
+# but moreutils' chronic fails as well
 alias chronic='chronic-helper #'
 
 mispipe-helper () {
