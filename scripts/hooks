@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 
-: << :
-__chpwd_hook will return true when you just changed directory
-:
+# __chpwd_hook will return true when you just changed directory
 
 __chpwd_hook () {
-  local __chpwd=1
-  [[ -n $__olddir ]] && [[ $__olddir != $PWD ]] &&  __chpwd=0
-  __olddir="$PWD"
-  return $__chpwd
+  local chpwd=1
+  [[ -n $__olddir ]] && [[ $__olddir != $PWD ]] && chpwd=0
+  __olddir=$PWD
+  return $chpwd
 }
 

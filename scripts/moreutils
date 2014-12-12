@@ -2,7 +2,7 @@
 
 # replicas of moreutils
 
-sponge() {
+sponge () {
   local file=$(mktemp) && \
   cat > "$file" && \
   cat "$file" > "$1" && \

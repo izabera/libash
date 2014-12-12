@@ -1,33 +1,29 @@
 #!/usr/bin/env bash
 
-: << :
-usage: mkdirc a/b/c/d/e/f
-:
+# usage: mkdirc a/b/c/d/e/f
 
 mkdirc () {
-  if [ -z "$1" ] || [ -n "$2" ]; then
+  if [[ -z $1 || -n $2 ]]; then
     echo "Usage: $0 directory"
     return 1
   else
-    mkdir -p "$1"
-    cd "$1"
+    mkdir -p "$1" && cd "$1"
   fi
 }
 
-: << :
-go up and destroy temp directories
-:
+# go up and destroy temp directories
 
 uprm () {
-  temp=$(basename $PWD)
-  cd .. && rm -rf "$temp"
+  temp=${PWD##*/}
+  [[ $temp ]] && cd .. && rm -rf "$temp" # don't delete /
 }
 
-: << :
-backup your files easily
-:
+# backup your files easily to /backup with a timestamp
+# the /backup directory must exist and be writable
 
 backup () {
-  for file ; do cp "$file" "/backup/$(date +%Y-%m-%d-%H-%M-%S-)${file##*/}" ; done
+  for file ; do
+    cp "$file" "/backup/$(date +%Y-%m-%d-%H-%M-%S-)${file##*/}"
+  done
 }
 
