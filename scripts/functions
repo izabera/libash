@@ -22,8 +22,20 @@ uprm () {
 # the /backup directory must exist and be writable
 
 backup () {
+  local sha
   for file ; do
-    cp "$file" "/backup/$(date +%Y-%m-%d-%H-%M-%S-)${file##*/}"
+    read sha _ <<< $(printf %s "$file" | sha1sum)
+    cp "$file" "/backup/$(date +%Y-%m-%d-%H-%M-%S)-$sha-${file##*/}"
   done
 }
 
+# returns 0 if empty and 1 if not
+# if no parameter is specified, uses PWD
+
+isempty () (
+  shopt -s dotglob nullglob
+  [[ -z $1 ]] && set -- "$PWD"
+  files=("$1/"*)
+  (( ${#files[@]} > 0 )) && return 1
+  return 0
+)

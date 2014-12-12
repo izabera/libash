@@ -2,12 +2,19 @@
 
 # replicas of moreutils
 
+# usage: command-that-reads-from myfile | sponge myfile
+
 sponge () {
+  # cat a > b   instead of   mv a b
+  # slower, but doesn't break hardlinks and doesn't mess with owner and permissions
   local file=$(mktemp) && \
   cat > "$file" && \
   cat "$file" > "$1" && \
   rm "$file"
 }
+
+# usage: command | ts > logfile
+# it will break if a line contains a \0 but there's no way to fix it in bash
 
 ts () {
   local format=+%c
@@ -17,3 +24,14 @@ ts () {
     printf '%s %s\n' "$timestamp" "$REPLY"
   done
 }
+
+# usage: chronic command args 
+# non interactive version that doesn't rely on the history hack
+# cannot run compound commands
+
+chronic () {
+  local file=$(mktemp)
+  if ! "$@" &> "$file" ; then cat "$file" ; fi
+  rm "$file"
+}
+
