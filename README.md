@@ -20,11 +20,10 @@ source "$LIBASHDIR/libash"
 Stuff included
 --------------
 
-- colorful progressbar
-- b/w progressbar
+- progressbars
 - right prompt (to come)
 - chpwd hook
-- something similar to `moreutils`, but that works with builtins and shell functions
+- something similar to `moreutils`, but that works with shell stuff
 
 
 
@@ -38,14 +37,19 @@ Usage
 `chronic command file`
 
 *chronic* will run a command quietly unless it fails 
-(applies to builtins and shell functions as well)
+(applies to builtins, shell functions and compound commands as well)
 
 `mispipe [num] command0 args | command1 args | command2 args | command3`
 
 *mispipe* will run the pipeline, and will return the exit code of the n-th command
-(applies to builtins and shell functions as well)  
+(applies to builtins, shell functions and compound commands as well)  
 If `[num]` is not provided, returns the exit code of command0  
 If `[num]` is bigger than the number of commands+1, it returns the exit code of the last one
+
+`command | ts [format]`
+
+*ts* will timestamp the data stream  
+If no format is provided, +%c will be used
 
 
 

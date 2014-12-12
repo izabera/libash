@@ -12,7 +12,7 @@
 
 aringa-helper () {
   history 1 | {
-    read _ _ command
+    read -r _ _ command
     dir=${PWD/#"$HOME"/\~\/} dir=${dir/\/}
     {
       printf '%s@%s %s $ %s\n' "$USER" "$HOSTNAME" "$dir" "$command"
@@ -26,7 +26,7 @@ alias caringa='aringa-helper #'
 
 chronic-helper () {
   history 1 | {
-    read _ _ command
+    read -r _ _ command
     file=$(mktemp)
     if ! eval "$command" &> "$file" ; then cat "$file" ; fi
     rm "$file"
@@ -38,9 +38,9 @@ alias chronic='chronic-helper #'
 
 mispipe-helper () {
   history 1 | {
-    read _ _ command
+    read -r _ _ command
     num=0
-    read num subcommand <<< "$command"
+    read -r num subcommand <<< "$command"
     if [[ $num != *[!0-9]* ]] ; then
       command=$subcommand
     else
