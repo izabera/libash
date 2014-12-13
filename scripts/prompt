@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+blue=$(tput setaf 4)
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+cyan=$(tput setaf 6)
+white=$(tput setaf 7)
+yellow=$(tput setaf 3)
+no_color=$(tput sgr 0)
+
+PROMPT_COMMAND='chpwd'
+
+PS1='\[$green\]\u\[$no_color\]@\[$cyan\]\h\[$no_color\] \[$red\]\w\[$no_color\] \[$(return_status)\]\$\[$no_color\] '
+

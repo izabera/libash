@@ -19,22 +19,21 @@ works like the first one
 colorbar () {
   local value=$1
   local total=$2
-  local i=0
-  printf [
+  local i
+  printf '['
   local red=$(tput setab 1)
   local green=$(tput setab 2)
-  for (( ; i<10; i++ )); do
+  for (( i=0 ; i<10; i++ )); do
     if (( i >= (value*10)/total )); then
       printf '%s ' "$red"
     else
       printf '%s ' "$green"
     fi
   done
-  tput sgr0
-  printf '] Progress: %d/%d' "$value" "$total"
+  printf '$no_color] Progress: %d/%d' "$value" "$total"
   [[ $3 ]] && printf -- " - %s" "$3"
   (( $1 != $2 )) && printf '\r' || echo
 }
 
-bwbar()(b=[;for i in {1..9};do((i>$1*9/$2))&&b+=-||b+=#;done;(($1==$2))&&echo $b]||printf "$b]\r";)
+#bwbar()(b=[;for i in {1..9};do((i>$1*9/$2))&&b+=-||b+=#;done;(($1==$2))&&echo $b]||printf "$b]\r";)
 

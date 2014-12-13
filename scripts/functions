@@ -3,8 +3,8 @@
 # usage: mkdirc a/b/c/d/e/f
 
 mkdirc () {
-  if [[ -z $1 || -n $2 ]]; then
-    echo "Usage: $0 directory"
+  if (($# == 1)); then
+    echo "Usage: $0 directory" >&2
     return 1
   else
     mkdir -p "$1" && cd "$1"
@@ -12,12 +12,14 @@ mkdirc () {
 }
 
 # go up and destroy temp directories
+# won't delete $HOME
 
 uprm () {
   temp=${PWD##*/}
-  [[ $temp ]] && cd .. && rm -rf "$temp" # don't delete /
+  [[ $PWD != "$HOME" ]] && cd .. && rm -rf "$temp"
 }
 
+# usage: backup FILE..
 # backup your files easily to /backup with a timestamp
 # the /backup directory must exist and be writable
 
@@ -79,24 +81,27 @@ haschanged () {
   done
 }
 
-# usage: abspath .././path/./to/../from/../to/./file
+# usage: abspath PATH..
+# (eg: abspath ..//./path/./to/..//from/../to/./file )
 # prints /absolute/path/to/file
-# returns 0 if that file exists
 # follows symlinks correctly
+# returns 0 if the last path of the list is an existing file or directory
 
 abspath () {
-  (($# == 1)) || return 2
-  # add an extra / to be removed later on, to help with paths like /path/to/file/..
-  local path=$1/
-  [[ $path = /* ]] || path=$PWD/$path
-  while [[ $path = */@(|.|..)/* ]] ; do
-    path=${path//\/.\//\/}              # /foo/./bar/      -> /foo/bar/
-    path=${path//\/\//\/}               # /foo//bar/       -> /foo/bar/
-    path=${path/#\/..\//\/}             # /../foo/         -> /foo/
-    path=${path/\/+([!\/])\/..\//\/}    # /foo/bar/../baz/ -> /foo/baz/
+  while (($#)) ; do
+    # add an extra / to be removed later on, to help with paths like /path/to/file/..
+    local path=$1/
+    [[ $path = /* ]] || path=$PWD/$path
+    while [[ $path = */@(|.|..)/* ]] ; do
+      path=${path//\/.\//\/}              # /foo/./bar/      -> /foo/bar/
+      path=${path//\/\//\/}               # /foo//bar/       -> /foo/bar/
+      path=${path/#\/..\//\/}             # /../foo/         -> /foo/
+      path=${path/\/+([!\/])\/..\//\/}    # /foo/bar/../baz/ -> /foo/baz/
+    done
+    [[ $path = / ]] || path=${path%/}
+    echo "$path"
+    shift
   done
-  [[ $path = / ]] || path=${path%/}
-  echo "$path"
   test -e "$path"
 }
 

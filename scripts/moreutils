@@ -29,9 +29,9 @@ ts () {
 # non interactive version that doesn't rely on the history hack
 # cannot run compound commands
 
-chronic () {
-  local file=$(mktemp)
-  if ! "$@" &> "$file" ; then cat "$file" ; fi
-  rm "$file"
-}
+#chronic () {
+  #local file=$(mktemp)
+  #if ! "$@" &> "$file" ; then cat "$file" ; fi
+  #rm "$file"
+#}
 
