@@ -79,26 +79,24 @@ haschanged () {
   done
 }
 
-# usage: resolvepath .././path/./to/../from/../to/./file
+# usage: abspath .././path/./to/../from/../to/./file
 # prints /absolute/path/to/file
 # returns 0 if that file exists
-# TODO: issues with symlinks
+# follows symlinks correctly
 
-resolvepath () {
-  (($# != 1)) && return 2
-  [[ $1 ]] || return 3
-  local path=$1
-  [[ ${path::1} != / ]] && path="$PWD/$path"
+abspath () {
+  (($# == 1)) || return 2
   # add an extra / to be removed later on, to help with paths like /path/to/file/..
-  path="$path/"
-  while [[ $path = *//* || $path = */./* || $path = */../* ]] ; do
-    path=${path//\/.\//\/}              # /foo/./       -> /foo/
-    path=${path//\/\//\/}               # /foo//bar/    -> /foo/bar/
-    path=${path/#\/..\//\/}             # /../foo/      -> /foo/
-    path=${path/\/+([!\/])\/..\//\/}    # /foo/bar/../  -> /foo/
+  local path=$1/
+  [[ $path = /* ]] || path=$PWD/$path
+  while [[ $path = */@(|.|..)/* ]] ; do
+    path=${path//\/.\//\/}              # /foo/./bar/      -> /foo/bar/
+    path=${path//\/\//\/}               # /foo//bar/       -> /foo/bar/
+    path=${path/#\/..\//\/}             # /../foo/         -> /foo/
+    path=${path/\/+([!\/])\/..\//\/}    # /foo/bar/../baz/ -> /foo/baz/
   done
-  [[ $path = / ]] || path="${path%/}"
-  printf %s\\n "$path"
+  [[ $path = / ]] || path=${path%/}
+  echo "$path"
   test -e "$path"
 }
 
