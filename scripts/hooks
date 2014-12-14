@@ -9,3 +9,10 @@ chpwd_hook () {
   return $chpwd
 }
 
+periodic_hook () {
+  [[ $1 ]] && : todo
+}
+
+add_to_hook () {
+  : to do
+}

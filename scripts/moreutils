@@ -30,6 +30,7 @@ ts () {
 # cannot run compound commands
 
 #chronic () {
+  #:
   #local file=$(mktemp)
   #if ! "$@" &> "$file" ; then cat "$file" ; fi
   #rm "$file"

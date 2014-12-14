@@ -88,9 +88,10 @@ haschanged () {
 # returns 0 if the last path of the list is an existing file or directory
 
 abspath () {
+  local path
   while (($#)) ; do
     # add an extra / to be removed later on, to help with paths like /path/to/file/..
-    local path=$1/
+    path=$1/
     [[ $path = /* ]] || path=$PWD/$path
     while [[ $path = */@(|.|..)/* ]] ; do
       path=${path//\/.\//\/}              # /foo/./bar/      -> /foo/bar/

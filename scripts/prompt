@@ -8,7 +8,15 @@ white=$(tput setaf 7)
 yellow=$(tput setaf 3)
 no_color=$(tput sgr 0)
 
-PROMPT_COMMAND='chpwd'
+PROMPT_COMMAND='chpwd_hook'
+
+return_value () {
+  (( $? == 0 )) && printf %s%d%s "$green" "$?" "$no_color" || printf %s%d%s "$red" "$?" "$no_color"
+}
+
+return_status () {
+  (( $? == 0 )) && printf %s "$green" || printf %s "$red"
+}
 
 PS1='\[$green\]\u\[$no_color\]@\[$cyan\]\h\[$no_color\] \[$red\]\w\[$no_color\] \[$(return_status)\]\$\[$no_color\] '
 
