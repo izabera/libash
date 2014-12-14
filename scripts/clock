@@ -2,25 +2,27 @@
 
 # bash clock \o/
 
-shopt -s checkwinsize
+clock () (
 
-if ! figlet foo > /dev/null ; then
-  echo "Figlet is required" >&2
-  exit 1
-fi
+  shopt -s checkwinsize
 
-printhelp() {
-  cat << EOF
+  if ! figlet foo > /dev/null ; then
+    echo "Figlet is required" >&2
+    exit 1
+  fi
+
+  printhelp() {
+    cat << EOF
 Usage: alarm [-h|--help] [-s|--silent] [HH:MM[:SS]]
 
 Displays current time and wakes you up.
 
 Options:
-  -h|--help    displays this help and exit
-  -s|--silent  doesn't print a bell character
+-h|--help    displays this help and exit
+-s|--silent  doesn't print a bell character
 
 EOF
-}
+  }
 
 # tput stuff
 #
@@ -36,72 +38,73 @@ EOF
 # bel     = bell character
 # blink   = blinking text
 
-draw () {
-  date=$(date +%H:%M:%S)
-  clear
-  tput cud $(( LINES / 2 - 3 ))
-  figlet -c -w $COLUMNS "$date"
-  if [[ $var ]] && (( SECONDS - timestamp < 3 )) || [[ $alarm && $alarm < "$date" ]]; then
-    if [[ $alarm && $alarm < "$date" ]]; then
-      msg='Wake up!'
-      tput cup $LINES $(( (COLUMNS - ${#msg}) / 2 ))
-      tput blink
-      tput setaf 1 # red
-      [[ $bell ]] && tput bel
-    else
-      tput cup $LINES $(( (COLUMNS - ${#msg}) / 2 ))
+  draw () {
+    date=$(date +%H:%M:%S)
+    clear
+    tput cud $(( LINES / 2 - 3 ))
+    figlet -c -w $COLUMNS "$date"
+    if [[ $var ]] && (( SECONDS - timestamp < 3 )) || [[ $alarm && $alarm < "$date" ]]; then
+      if [[ $alarm && $alarm < "$date" ]]; then
+        msg='Wake up!'
+        tput cup $LINES $(( (COLUMNS - ${#msg}) / 2 ))
+        tput blink
+        tput setaf 1 # red
+        [[ $bell ]] && tput bel
+      else
+        tput cup $LINES $(( (COLUMNS - ${#msg}) / 2 ))
+      fi
+      printf %s "$msg"
+      tput sgr 0
     fi
-    printf %s "$msg"
-    tput sgr 0
-  fi
-}
+  }
 
-while (($#)); do
-  case "$1" in
-    -h|--help)
-      printhelp
-      exit
-      ;;
-    -s|--silent)
-      unset bell
-      shift
-      ;;
-    ??:??)
-      alarm=$1:00
-      ;&
-    ??:??:??)
-      alarm=${alarm-"$1"}
-      if ! date -d "$alarm" &> /dev/null ; then
+  while (($#)); do
+    case "$1" in
+      -h|--help)
+        printhelp
+        exit
+        ;;
+      -s|--silent)
+        unset bell
+        shift
+        ;;
+      ??:??)
+        alarm=$1:00
+        ;&
+      ??:??:??)
+        alarm=${alarm-"$1"}
+        if ! date -d "$alarm" &> /dev/null ; then
+          echo "Invalid time" >&2
+          printhelp >&2
+          exit 1
+        fi
+        shift
+        ;;
+      *)
         echo "Invalid time" >&2
         printhelp >&2
         exit 1
-      fi
-      shift
-      ;;
-    *)
-      echo "Invalid time" >&2
-      printhelp >&2
-      exit 1
-      ;;
-  esac
-done
+        ;;
+    esac
+  done
 
-tput smcup
-tput civis
-trap 'tput rmcup' EXIT
+  tput smcup
+  tput civis
+  trap 'tput rmcup' EXIT
 
-msg='Press q to exit'
-timestamp=0
-bell=foo
+  msg='Press q to quit'
+  timestamp=0
+  bell=foo
 
-while
-  draw
-  read -n 1 -t 1 || :
-do
-  if [[ $REPLY = [qQ] ]]; then
-    exit
-  elif [[ $REPLY ]]; then
-    var=$REPLY timestamp=$SECONDS
-  fi
-done
+  while
+    draw
+    read -n 1 -t 1 || :
+  do
+    if [[ $REPLY = [qQ] ]]; then
+      exit
+    elif [[ $REPLY ]]; then
+      var=$REPLY timestamp=$SECONDS
+    fi
+  done
 
+)
