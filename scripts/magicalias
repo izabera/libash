@@ -28,8 +28,13 @@ chronic-helper () {
   history 1 | {
     read -r _ _ command
     file=$(mktemp)
-    if ! eval "$command" &> "$file" ; then cat "$file" ; fi
+    eval "$command" &> "$file"
+    var=$?
+    if ((var)); then
+      cat "$file"
+    fi
     rm "$file"
+    exit $var
   }
 }
 # this doesn't really work if your program writes to /dev/tty or similar
