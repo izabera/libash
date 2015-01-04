@@ -106,3 +106,39 @@ abspath () {
   test -e "$path"
 }
 
+
+
+alarm () {
+
+  # alarm function without forks \o/
+  # unless you want to run a command. in that case it forks \o/
+
+  local alarm=${1:-"$ALARMTIME"}
+  [[ $alarm = ??:?? ]] || {
+  echo 'Usage: $0 [HH:MM [message [command args...]]]' >&2
+  return 1
+}
+
+# empty msg if $2 is ''
+local msg=${2-"${ALARMMSG-"It's ${alarm}, time to wake up"}"}
+local time
+
+until 
+  printf -v time '%(%T)T'
+  printf '\r%s' "$time"
+  [[ $time = "$alarm":* ]]
+do
+  # when running interactively, bash will use everything that's left
+  # in read's buffer after the timeout as part of the next command
+  # using -d '' to disable this
+  read -t 1 -s -d ''
+done
+
+printf '\r        \r'
+[[ $msg ]] && printf '%s\n' "$msg"
+if (( $# > 2 )); then 
+  shift 2
+  "$@"
+fi
+                                                                                }
+
