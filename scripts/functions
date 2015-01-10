@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 
+
 # usage: mkdirc a/b/c/d/e/f
 
 mkdirc () {
-  if (($# == 1)); then
+  if ((!$#)); then
     echo "Usage: $0 directory" >&2
     return 1
   else
     mkdir -p "$1" && cd "$1"
   fi
 }
+
 
 # go up and destroy temp directories
 # won't delete $HOME
@@ -18,6 +20,7 @@ uprm () {
   temp=${PWD##*/}
   [[ $PWD != "$HOME" ]] && cd .. && rm -rf "$temp"
 }
+
 
 # usage: backup FILE..
 # backup your files easily to /backup with a timestamp
@@ -31,23 +34,37 @@ backup () {
   done
 }
 
+
 # returns 0 if empty and 1 if not
 # if no parameter is specified, uses PWD
 
-isempty () (
-  shopt -s dotglob nullglob
-  [[ -z $1 ]] && set -- "$PWD"
-  files=("$1/"*)
-  (( ${#files[@]} > 0 )) && return 1
-  return 0
-)
+isempty () {
+  local ret=0 files=() argnum=$#
+  (($#)) || set -- "$PWD"
+  while (($#)); do
+    if [[ ! -d $1 ]]; then
+      printf '%s is not a directory\n' "$1"
+      shift
+      continue
+    fi
+    files=("$1/"*)
+    if (( ${#files[@]} > 0 )); then
+      ret=1
+      # suppress printing if no arg
+      ((argnum)) && printf '%s is not empty\n' "$1"
+    fi
+    shift
+  done
+  return "$ret"
+}
+
 
 # usage: haschanged [-p] file [file...]
 # -p option is for a parsable output
 
 haschanged () {
   local parsable=false
-  if [[ $1 = "-p" ]] ; then
+  if [[ $1 = -p ]] ; then
     parsable=true
     shift
   fi
@@ -81,6 +98,7 @@ haschanged () {
   done
 }
 
+
 # usage: abspath PATH..
 # (eg: abspath ..//./path/./to/..//from/../to/./file )
 # prints /absolute/path/to/file
@@ -107,6 +125,7 @@ abspath () {
 }
 
 
+# usage: alarm [HH:MM [message [command args...]]]
 
 alarm () {
 
@@ -115,30 +134,38 @@ alarm () {
 
   local alarm=${1:-"$ALARMTIME"}
   [[ $alarm = ??:?? ]] || {
-  echo 'Usage: $0 [HH:MM [message [command args...]]]' >&2
-  return 1
+    echo 'Usage: $0 [HH:MM [message [command args...]]]' >&2
+    return 1
+  }
+
+  # empty msg if $2 is ''
+  local msg=${2-"${ALARMMSG-"It's ${alarm}, time to wake up"}"}
+  local time
+
+  until 
+    printf -v time '%(%T)T'
+    printf '\r%s' "$time"
+    [[ $time = "$alarm":* ]]
+  do
+    # when running interactively, bash will use everything that's left
+    # in read's buffer after the timeout as part of the next command
+    # using -d '' to disable this
+    read -t 1 -s -d ''
+  done
+
+  printf '\r        \r'
+  [[ $msg ]] && printf '%s\n' "$msg"
+  if (( $# > 2 )); then 
+    shift 2
+    "$@"
+  fi
 }
 
-# empty msg if $2 is ''
-local msg=${2-"${ALARMMSG-"It's ${alarm}, time to wake up"}"}
-local time
 
-until 
-  printf -v time '%(%T)T'
-  printf '\r%s' "$time"
-  [[ $time = "$alarm":* ]]
-do
-  # when running interactively, bash will use everything that's left
-  # in read's buffer after the timeout as part of the next command
-  # using -d '' to disable this
-  read -t 1 -s -d ''
-done
+# usage: searchman page [thing-to-search]
+# only works with one page at a time
 
-printf '\r        \r'
-[[ $msg ]] && printf '%s\n' "$msg"
-if (( $# > 2 )); then 
-  shift 2
-  "$@"
-fi
-                                                                                }
+searchman () {
+  MANPAGER="${MANPAGER:-less -si} ${2++/\"$2\"}" man "${1?Which manual page do you want?}"
+}
 

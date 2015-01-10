@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+
+# regular aliases for interactive use
+
+alias ls='ls -h --color=auto'
+alias ll='ls -l'
+alias la='ls -A'
+alias l='ls -lA'
+
+alias du='du -h'
+alias df='df -h'
+
+alias grep='grep --color=auto'
+alias free='free -h'
+
+alias lsless='ls --color=always | less -R'
+alias psless='ps aux | less'
+
+# lynx is annoying
+alias lynx='lynx -accept-all-cookies'
+
+# any charset that doesn't exist will restore the default |-- and `--
+# instead of the crappy unicode replacements ├── and └──
+alias tree='tree --charset fail'
+
+# so that urxvt doesn't break the links
+alias man='man --nj --nh'
+
+
+
+
+if [[ $SHELLOPTS != *emacs* ]]; then
+  alias :{x,{,w}q}{,a}=exit
+  alias :e=vim
+  alias :h=man
+  alias info='info --vi-keys'
+fi
+
+
+
+shopt -s autocd
+alias -- -='[[ $OLDPWD ]] && cd - || printf %s\\n "$PWD"'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
