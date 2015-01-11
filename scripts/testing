@@ -44,6 +44,10 @@ EOF
   done
   ((${#newshells[@]})) && shells=("${newshells[@]}")
   "${resetcolors:=false}" || no_color= # defined in libash prompt, undefine it if no -r
+
+  input () { cat; } # fake shell to show what will be executed
+  shells=(input "${shells[@]}")
+
   for shell in "${shells[@]}" ; do
     if "${oneline:=true}" ; then
       printf '%s%8s: ' "$no_color" "$shell"
