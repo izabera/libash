@@ -3,8 +3,9 @@
 
 shelltest () (
   shells=(bash bsh bush dash jsh ksh mksh pdksh posh zsh)
-  while getopts :oOhs: opt ; do
+  while getopts :oOhrs: opt ; do
     case $opt in
+      r) resetcolors=true;;
       o) oneline=true;;
       O) oneline=false;;
       h) cat << EOF
@@ -12,7 +13,7 @@ Test code with various shells.
 
 Usage: shelltest [options] [shells] -- [parameters for the shell]
 
-Examples: shelltest -O
+Examples: shelltest -O -r
           shelltest bash dash -- -c 'echo foo'    (only two shells)
           shelltest -o -- -- -c 'echo foo'        (default shells)
           shelltest -s csh -s rc -s fish          (three more shells)
@@ -22,10 +23,12 @@ ${shells[@]}
 
 Options that follow the -- will be passed to the shell.
 
-Options:  -o   print in a single line (default)
-          -O   print in multiple lines with headers
-          -s   select all the default shells + an additional one
+Options:  
           -h   print this help
+          -o   print in a single line (default)
+          -O   print in multiple lines with headers
+          -r   reset colors before starting each shell
+          -s   select all the default shells + an additional one
 EOF
           exit;;
       s) shells+=("$OPTARG") ;;
@@ -40,6 +43,7 @@ EOF
     shift
   done
   ((${#newshells[@]})) && shells=("${newshells[@]}")
+  "${resetcolors:=false}" || no_color= # defined in libash prompt, undefine it if no -r
   for shell in "${shells[@]}" ; do
     if "${oneline:=true}" ; then
       printf '%s%8s: ' "$no_color" "$shell"
@@ -47,6 +51,6 @@ EOF
       printf '%s%s==> %s <==\n' "$no_color" "$var" "$shell"
       var=$'\n'
     fi
-    "$shell" "$@" < /dev/fd/0
+    "$shell" "$@" < /dev/fd/0 # abusing herestrings to pass the same input to each shell
   done <<< "$(cat)"
 )
