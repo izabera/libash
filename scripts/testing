@@ -37,15 +37,28 @@ EOF
     esac
   done
   shift $((OPTIND-1))
+
+  # select shells
   for opt do
     [[ $opt = -- ]] && shift && break;
     newshells+=("$opt")
     shift
   done
+
   ((${#newshells[@]})) && shells=("${newshells[@]}")
   "${resetcolors:=false}" || no_color= # defined in libash prompt, undefine it if no -r
 
-  input () { cat; } # fake shell to show what will be executed
+  # fake shell to show what will be executed
+  input () {
+    cat
+    # print -c (from parent)
+    OPTIND=1
+    while getopts :c: opt; do
+      [[ $opt = c ]] && printf '%8s: %s\n' -c "$OPTARG" 
+    done
+
+    printf '=======================\n'
+  }
   shells=(input "${shells[@]}")
 
   for shell in "${shells[@]}" ; do

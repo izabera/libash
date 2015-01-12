@@ -166,6 +166,6 @@ alarm () {
 # only works with one page at a time
 
 searchman () {
-  MANPAGER="${MANPAGER:-less -si} ${2++/\"$2\"}" man "${1?Which manual page do you want?}"
+  MANPAGER="${MANPAGER:-less -sI} ${2++/\"$2\"}" man "${1?Which manual page do you want?}"
 }
 
