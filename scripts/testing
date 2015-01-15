@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+readinput () {
+  # basic cat replacement that lets you use some editing features
+  while read -r -e || { printf %s "$REPLY"; false; } ; do
+    printf '%s\n' "$REPLY"
+  done
+}
+
 
 shelltest () (
   shells=(bash bsh bush dash jsh ksh mksh pdksh posh zsh)
@@ -51,12 +58,9 @@ EOF
   # fake shell to show what will be executed
   input () {
     cat
-    # print -c (from parent)
-    OPTIND=1
-    while getopts :c: opt; do
-      [[ $opt = c ]] && printf '%8s: %s\n' -c "$OPTARG" 
-    done
-
+    printf '%8s: ' args
+    printf '%q ' "$@"
+    echo
     printf '=======================\n'
   }
   shells=(input "${shells[@]}")
@@ -69,5 +73,5 @@ EOF
       var=$'\n'
     fi
     "$shell" "$@" < /dev/fd/0 # abusing herestrings to pass the same input to each shell
-  done <<< "$(cat)"
+  done <<< "$(readinput)"
 )
