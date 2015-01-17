@@ -8,7 +8,7 @@ white=$(tput setaf 7)
 yellow=$(tput setaf 3)
 no_color=$(tput sgr 0)
 
-PROMPT_COMMAND='chpwd_hook'
+#PROMPT_COMMAND='chpwd_hook'
 
 return_value () {
   (( $? == 0 )) && printf %s%d%s "$green" "$?" "$no_color" || printf %s%d%s "$red" "$?" "$no_color"

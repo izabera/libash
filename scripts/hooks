@@ -1,18 +1,48 @@
 #!/usr/bin/env bash
 
-# chpwd_hook will return true when you just changed directory
 
+libash_hooks=(chpwd periodic)
+
+# chpwd_hook will return true when you change directory
 chpwd_hook () {
   local chpwd=1
   [[ $olddir ]] && [[ $olddir != "$PWD" ]] && chpwd=0
   olddir=$PWD
   return $chpwd
 }
+chpwd_hook_actions=()
+# sample hook:
+# git rev-parse 2> /dev/null && git status
 
 periodic_hook () {
-  [[ $1 ]] && : todo
+  : todo
+}
+periodic_hook_actions=()
+
+libash_handle_hook () {
+  # hardcoded :(
+  case $1 in
+    chpwd) for i in "${chpwd_hook_actions[@]}"; do eval "$i"; done ;;
+    periodic) for i in "${periodic_hook_actions[@]}"; do eval "$i"; done ;;
+  esac
+}
+
+libash_hook_handler () {
+  for i in "${libash_hooks[@]}"; do "$i"_hook && libash_handle_hook "$i"; done
 }
 
 add_to_hook () {
-  : to do
+  (($# != 2)) && return 1
+  case $1 in
+    chpwd) chpwd_hook_actions+=("$2");;
+    periodic) periodic_hook_actions+=("$2");;
+    *) echo Unknown handle; return 1;;
+  esac
+  read -erp 'Add permanently? '
+  if [[ $REPLY = [Yy]* ]]; then
+    echo "${1}_hook_actions+=(\"$2\")" >> ~/.config/libash
+  fi
+  return 0
 }
+
+PROMPT_COMMAND=libash_hook_handler
