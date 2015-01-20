@@ -169,3 +169,20 @@ searchman () {
   MANPAGER="${MANPAGER:-less -sI} ${2++/\"$2\"}" man "${1?Which manual page do you want?}"
 }
 
+
+# stfu
+
+silent () { "$@" > /dev/null 2>&1; }
+silout () { "$@" > /dev/null; }
+silerr () { "$@" 2> /dev/null; }
+
+
+# multiecho, no options
+# mecho 2 hello world
+mecho () {
+  local num=$1
+  shift
+  for ((i = 0; i < num - 1; i++))
+    { printf %s "$* "; }
+  printf %s\\n "$*"
+}
