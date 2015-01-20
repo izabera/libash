@@ -186,3 +186,20 @@ mecho () {
     { printf %s "$* "; }
   printf %s\\n "$*"
 }
+
+
+# usage: isup [host...]
+# if no host, tries to connect to google
+# (it uses isitup api, but isup is shorter to type)
+
+isup () {
+  if (($#)); then
+    for uri; do
+      IFS=', ' read _ _ status _ < <(curl -s "http://isitup.org/${uri}.txt")
+      [[ $status = 1 ]] && echo "$uri is online" || echo "$uri is not online"
+    done
+  else
+    silent ping -c 1 www.google.com && echo "You're online" || echo "You're not online"
+  fi
+}
+
