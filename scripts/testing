@@ -1,13 +1,5 @@
 #!/usr/bin/env bash
 
-readinput () {
-  # basic cat replacement that lets you use some editing features
-  while read -r -e || { printf %s "$REPLY"; false; } ; do
-    printf '%s\n' "$REPLY"
-  done
-}
-
-
 shelltest () (
   shells=(bash bsh bush dash jsh ksh mksh pdksh posh zsh)
   while getopts :oOhrs: opt ; do

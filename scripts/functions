@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# basic cat replacement that lets you use some editing features
+readinput () {
+  while read -r -e || { printf %s "$REPLY"; false; } ; do
+    printf '%s\n' "$REPLY"
+  done
+}
+
 
 # usage: mkdirc a/b/c/d/e/f
 
