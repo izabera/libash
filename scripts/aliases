@@ -91,3 +91,6 @@ if type -P polipo &> /dev/null; then
   #wget will read that variable
 fi
 
+# annoying
+alias gdb='gdb -q'
+alias bc='bc -q'
