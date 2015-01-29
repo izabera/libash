@@ -200,13 +200,15 @@ mecho () {
 # (it uses isitup api, but isup is shorter to type)
 
 isup () {
+  local ret=0
   if (($#)); then
     for uri; do
       IFS=', ' read _ _ status _ < <(curl -s "http://isitup.org/${uri}.txt")
-      [[ $status = 1 ]] && echo "$uri is online" || echo "$uri is not online"
+      [[ $status = 1 ]] && echo "$uri is online" || { echo "$uri is not online"; ret=1; }
     done
   else
-    silent ping -c 1 www.google.com && echo "You're online" || echo "You're not online"
+    silent ping -c 1 www.google.com && echo "You're online" || { echo "You're not online"; ret=1; }
   fi
+  return $ret
 }
 

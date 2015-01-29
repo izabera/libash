@@ -3,7 +3,7 @@
 
 # regular aliases for interactive use
 
-alias ls='ls -h --color=auto'
+alias ls='ls -ph --color=auto'
 alias ll='ls -l'
 alias la='ls -A'
 alias l='ls -lA'
