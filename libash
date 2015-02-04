@@ -11,7 +11,7 @@ PROMPT_COMMAND=
 
 [[ -r /usr/share/bash-completion/bash_completion ]] && . /usr/share/bash-completion/bash_completion
 
-shopt -s extglob
+shopt -s extglob globstar
 for file in "$LIBASHDIR/scripts/"!(magicalias) ; do
   source "$file"
 done
