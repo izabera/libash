@@ -12,10 +12,10 @@ readinput () {
 
 mkdirc () {
   if ((!$#)); then
-    echo "Usage: $0 directory" >&2
+    echo "Usage: $0 directory..." >&2
     return 1
   else
-    mkdir -p "$1" && cd "$1"
+    mkdir -p -- "$@" && cd -- "$_"
   fi
 }
 
@@ -24,7 +24,7 @@ mkdirc () {
 # won't delete $HOME
 
 uprm () {
-  temp=${PWD##*/}
+  local temp=${PWD##*/}
   [[ $PWD != "$HOME" ]] && cd .. && rm -rf "$temp"
 }
 
@@ -212,3 +212,4 @@ isup () {
   return $ret
 }
 
+myip () { curl icanhazip.com; }

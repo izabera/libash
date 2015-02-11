@@ -108,8 +108,8 @@ make () {
 
 # polipo cache
 if type -P polipo &> /dev/null; then
-  ${http_proxy+:} export http_proxy=localhost:8123
-  alias curl='curl -x "${http_proxy:-localhost:8123}"'
+  ${http_proxy+:} export http_proxy=http://localhost:8123/
+  alias curl='curl -x "${http_proxy:-http://localhost:8123/}"'
   #wget will read that variable
 fi
 

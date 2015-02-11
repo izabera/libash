@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# avoid opening binary files / pictures with vim
+_vim () {
+  # read filename
+  while read -r -d ''; do
+    # mime type (remove : and leading whitespace)
+    read -r _ type;
+    if [[ $type = text* ]]; then COMPREPLY+=("$REPLY"); fi
+  done < <(file --mime-type -0 -- "${COMP_WORDS[COMP_CWORD]}"*)
+}
+
+complete -o plusdirs -F _vim vim -o nospace
