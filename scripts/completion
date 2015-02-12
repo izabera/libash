@@ -40,4 +40,22 @@ _vim () {
 complete -o plusdirs -F _vim vim -o nospace
 
 # use this in case file fails detect a file as text
+# or in huge directories with thousands of file
 alias __vim=vim
+
+
+
+_busybox () {
+  if (( ${#COMP_WORDS[@]} < 3 )); then
+    while read -r; do
+      [[ $REPLY = "${COMP_WORDS[COMP_CWORD]}"* ]] && COMPREPLY+=("$REPLY")
+    done < <(busybox --list)
+  else
+    while read -r -d ''; do
+      COMPREPLY+=("$REPLY")
+    done < <(libash_compgen -fz "${COMP_WORDS[COMP_CWORD]}")
+    compopt -o plusdirs
+  fi
+}
+complete -D -F _busybox busybox
+
