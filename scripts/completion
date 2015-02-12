@@ -6,7 +6,7 @@
 # mainly to add a separator option
 libash_compgen () {
   OPTIND=1
-  local opt d=: f=: S='\n' completions comp
+  local opt d=: f=: S='\n' completions comp case
   while getopts dfzS: opt; do
     case $opt in
       d) d=;;        # dirnames
@@ -17,7 +17,12 @@ libash_compgen () {
   done
   shift $((OPTIND-1))
   [[ -d $1 && $1 != */ ]] && set -- "$1"/
+  if shopt -q nocaseglob; then case=no; fi
+  if [[ $LIBASH_CASE = no || $(bind -v) = *"completion-ignore-case on"* ]]; then
+    shopt -s nocaseglob
+  fi
   completions=("$1"*)
+  if [[ case = no ]]; then shopt -u nocaseglob; fi
   for comp in "${completions[@]}"; do
     if [[ -f $comp ]]; then
       $f printf "%s$S" "$comp"
@@ -44,13 +49,27 @@ _vim () {
       [[ $REPLY = "$HOME"/* && $2 = '~'* ]] && REPLY=${REPLY/"$HOME"/'~'}
       COMPREPLY+=("$REPLY")
     fi
-  done < <(file --mime-type -0 -L -- "$path"*)
-  compopt -o plusdirs
+  done < <( if shopt -q nocaseglob; then case=no; fi
+            if [[ $LIBASH_CASE = no || $(bind -v) = *"completion-ignore-case on"* ]]; then
+              shopt -s nocaseglob
+            fi
+            shopt -s nullglob
+            file --mime-type -0 -L -r -- /dev/null "$path"*)
+  
   # FIXME
   # when you're trying to complete ~ without / it doesn't show the directories
+
+  # workaround, not perfect
+  if [[ $2 = '~' ]]; then
+    shopt -s nullglob
+    local dirs=(~/*/)
+    shopt -u nullglob
+    dirs=("${dirs[@]%/}") dirs=("${dirs[@]/"$HOME"/'~'}")
+    COMPREPLY+=("${dirs[@]}")
+  fi
 }
 
-complete -F _vim vim
+complete -o plusdirs -F _vim vim
 
 # use this in case file fails detect a file as text
 # or in huge directories with thousands of file
