@@ -29,15 +29,28 @@ libash_compgen () {
 
 # avoid opening binary files / pictures with vim
 _vim () {
+  local type path
+  case $2 in
+    '~') path=$HOME;;
+    '~/'*) path=${2/'~'/"$HOME"};;
+    *) path=$2;;
+  esac
+  [[ -d $path ]] && path=${path%/}/
   # read filename
   while read -r -d ''; do
     # mime type (remove : and leading whitespace)
     read -r _ type;
-    if [[ $type = text* ]]; then COMPREPLY+=("$REPLY"); fi
-  done < <(file --mime-type -0 -L -- "${COMP_WORDS[COMP_CWORD]}"*)
+    if [[ $type = text* ]]; then
+      [[ $REPLY = "$HOME"/* && $2 = '~'* ]] && REPLY=${REPLY/"$HOME"/'~'}
+      COMPREPLY+=("$REPLY")
+    fi
+  done < <(file --mime-type -0 -L -- "$path"*)
+  compopt -o plusdirs
+  # FIXME
+  # when you're trying to complete ~ without / it doesn't show the directories
 }
 
-complete -o plusdirs -F _vim vim -o nospace
+complete -F _vim vim
 
 # use this in case file fails detect a file as text
 # or in huge directories with thousands of file
@@ -48,13 +61,15 @@ alias __vim=vim
 _busybox () {
   if (( ${#COMP_WORDS[@]} < 3 )); then
     while read -r; do
-      [[ $REPLY = "${COMP_WORDS[COMP_CWORD]}"* ]] && COMPREPLY+=("$REPLY")
+      [[ $REPLY = "$2"* ]] && COMPREPLY+=("$REPLY")
     done < <(busybox --list)
   else
-    while read -r -d ''; do
-      COMPREPLY+=("$REPLY")
-    done < <(libash_compgen -fz "${COMP_WORDS[COMP_CWORD]}")
-    compopt -o plusdirs
+    #while read -r -d ''; do
+      #COMPREPLY+=("$REPLY")
+    #done < <(libash_compgen -fz "${COMP_WORDS[COMP_CWORD]}")
+    compopt -o bashdefault
+    compopt -o default
+    compopt -o filenames
   fi
 }
 complete -D -F _busybox busybox
