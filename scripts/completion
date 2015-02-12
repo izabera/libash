@@ -2,8 +2,29 @@
 
 
 
-# partial rewrite of compgen to add a -d option to set the delimiter
+# partial rewrite of compgen
+# mainly to add a separator option
 libash_compgen () {
+  OPTIND=1
+  local opt d=: f=: S='\n' completions comp
+  while getopts dfzS: opt; do
+    case $opt in
+      d) d=;;        # dirnames
+      f) f=;;        # filenames
+      z) S='\0';;    # NUL delimited
+      S) S=$OPTARG;; # OPTARG delimited
+    esac
+  done
+  shift $((OPTIND-1))
+  [[ -d $1 && $1 != */ ]] && set -- "$1"/
+  completions=("$1"*)
+  for comp in "${completions[@]}"; do
+    if [[ -f $comp ]]; then
+      $f printf "%s$S" "$comp"
+    elif [[ -d $comp ]]; then
+      $d printf "%s$S" "$comp"
+    fi
+  done
 }
 
 # avoid opening binary files / pictures with vim
