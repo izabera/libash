@@ -14,15 +14,10 @@ sponge () {
 }
 
 # usage: command | ts > logfile
-# it will break if a line contains a \0 but there's no way to fix it in bash
 
 ts () {
-  local format=+%c
-  [[ $1 ]] && format=+$1
-  while read -r ; do
-    timestamp=$(date "$format")
-    printf '%s %s\n' "$timestamp" "$REPLY"
-  done
+  local format=${1-%c}
+  while read -r ; do printf "%($format)T %s\n" -1 "$REPLY"; done
 }
 
 # usage: chronic command args 

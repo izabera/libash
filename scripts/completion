@@ -1,5 +1,11 @@
 #!/bin/bash
 
+
+
+# partial rewrite of compgen to add a -d option to set the delimiter
+libash_compgen () {
+}
+
 # avoid opening binary files / pictures with vim
 _vim () {
   # read filename
@@ -7,7 +13,10 @@ _vim () {
     # mime type (remove : and leading whitespace)
     read -r _ type;
     if [[ $type = text* ]]; then COMPREPLY+=("$REPLY"); fi
-  done < <(file --mime-type -0 -- "${COMP_WORDS[COMP_CWORD]}"*)
+  done < <(file --mime-type -0 -L -- "${COMP_WORDS[COMP_CWORD]}"*)
 }
 
 complete -o plusdirs -F _vim vim -o nospace
+
+# use this in case file fails detect a file as text
+alias __vim=vim
