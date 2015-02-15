@@ -83,13 +83,22 @@ _busybox () {
       [[ $REPLY = "$2"* ]] && COMPREPLY+=("$REPLY")
     done < <(busybox --list)
   else
-    #while read -r -d ''; do
-      #COMPREPLY+=("$REPLY")
-    #done < <(libash_compgen -fz "${COMP_WORDS[COMP_CWORD]}")
     compopt -o bashdefault
     compopt -o default
     compopt -o filenames
   fi
 }
-complete -D -F _busybox busybox
+complete -F _busybox busybox
 
+_toybox () {
+  if (( ${#COMP_WORDS[@]} < 3 )); then
+    while read -r; do
+      [[ $REPLY = "$2"* ]] && COMPREPLY+=("$REPLY")
+    done < <(toybox | tr ' ' '\n')
+  else
+    compopt -o bashdefault
+    compopt -o default
+    compopt -o filenames
+  fi
+}
+complete -F _toybox toybox
