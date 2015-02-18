@@ -35,6 +35,10 @@ alias gdb='gdb -q'
 alias bc='bc -q'
 
 
+# this is new in 2.25.something
+alias demsgf="dmesg --follow"
+
+
 
 if shopt -oq vi; then
   alias :{x,{,w}q}{,a}=exit

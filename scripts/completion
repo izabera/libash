@@ -54,8 +54,16 @@ _vim () {
               shopt -s nocaseglob
             fi
             shopt -s nullglob
-            file --mime-type -0 -L -r -- /dev/null "$path"*)
-  
+            # whitelist: (don't check these, add them by default)
+            # c|h|hpp|cpp|txt|md|tex
+            # blacklist: (don't check these either)
+            # png|jpg|jpeg|gif|mp4|mp3|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi
+            file --mime-type -0 -L -r -- /dev/null "$path"!(*.png|*.jpeg|*.jpg|*.gif|*.mp3|*.mp4|*.ogg|*.tar|*.gz|*.xz|*.bz2|*.lzma|*.pdf|*.a|*.o|*.so|*.wav|*.flac|*.mov|*.flv|*.avi|*.c|*.h|*.hpp|*.cpp|*.txt|*.md|*.tex)
+
+            arr=( "$path"*@(.@(c|h|hpp|cpp|txt|md|tex)) )
+            (( ${#arr[@]} )) && printf '%s\0: text\n' "${arr[@]}"
+            )
+
   # FIXME
   # when you're trying to complete ~ without / it doesn't show the directories
 
