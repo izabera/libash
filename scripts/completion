@@ -54,13 +54,13 @@ _vim () {
               shopt -s nocaseglob
             fi
             shopt -s nullglob
-            # whitelist: (don't check these, add them by default)
-            # c|h|hpp|cpp|txt|md|tex|py|sh
-            # blacklist: (don't check these either)
-            # png|jpg|jpeg|gif|mp4|mp3|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi
-            file --mime-type -0 -L -r -- /dev/null "$path"!(*.@(png|jp?(e)g|gif|mp[34]|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi|c|h|hpp|cpp|txt|md|tex|py|sh))
+            # don't check these, add them by default
+            whitelist='@(c|h)?(pp)|txt|md|tex|py|sh'
+            # don't check these either
+            blacklist='png|jp?(e)g|gif|mp[34]|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi'
+            file --mime-type -0 -L -r -- /dev/null "$path"!(*.@($whitelist|$blacklist))
 
-            arr=( "$path"*@(.@(c|h|hpp|cpp|txt|md|tex|py|sh)) )
+            arr=( "$path"*.@($whitelist) )
             (( ${#arr[@]} )) && printf '%s\0: text\n' "${arr[@]}"
             )
 
