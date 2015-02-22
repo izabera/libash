@@ -20,6 +20,9 @@ for file in "$LIBASHDIR/scripts/"!(magicalias) ; do
   source "$file"
 done
 
+# much betta
+TIMEFORMAT=$'\nreal: %lR, user: %lU, sys: %lS'
+
 [[ $- = *i* ]] && source "$LIBASHDIR/scripts/magicalias"
 
 [[ -r ~/.config/libash ]] && source ~/.config/libash

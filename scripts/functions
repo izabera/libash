@@ -109,26 +109,44 @@ haschanged () {
 # usage: abspath PATH..
 # (eg: abspath ..//./path/./to/..//from/../to/./file )
 # prints /absolute/path/to/file
-# follows symlinks correctly
+# follows symlinks if possible
 # returns 0 if the last path of the list is an existing file or directory
 
 abspath () {
   local path
   while (($#)) ; do
-    # add an extra / to be removed later on, to help with paths like /path/to/file/..
-    path=$1/
+    path=$1
     [[ $path = /* ]] || path=$PWD/$path
-    while [[ $path = */@(|.|..)/* ]] ; do
-      path=${path//\/.\//\/}              # /foo/./bar/      -> /foo/bar/
-      path=${path//\/\//\/}               # /foo//bar/       -> /foo/bar/
-      path=${path/#\/..\//\/}             # /../foo/         -> /foo/
-      path=${path/\/+([!\/])\/..\//\/}    # /foo/bar/../baz/ -> /foo/baz/
-    done
-    [[ $path = / ]] || path=${path%/}
+    # part of this is from lhunath
+
+    # test if the directory exist
+    if [[ -d $path ]]; then path=$(cd "$path" && echo "$PWD")
+    # or if it's a file in an existing directory
+    elif [[ -d ${path%/*} ]]; then path=$(cd "${path%/*}" && echo "$PWD/${path##*/}")
+
+    # if we have readlink, use that
+    elif readlink -m / >/dev/null 2>&1; then
+      path=$(readlink -m "$path")
+
+    # or realpath... hoping it's gnu realpath
+    elif realpath -m / >/dev/null 2>&1; then
+      path=$(realpath -m "$path")
+
+    else
+      # add an extra / to be removed later on, to help with paths like /path/to/file/..
+      path=$1/
+      while [[ $path = */@(|.|..)/* ]] ; do
+        path=${path//\/.\//\/}              # /foo/./bar/      -> /foo/bar/
+        path=${path//\/\//\/}               # /foo//bar/       -> /foo/bar/
+        path=${path/#\/..\//\/}             # /../foo/         -> /foo/
+        path=${path/\/+([!\/])\/..\//\/}    # /foo/bar/../baz/ -> /foo/baz/
+      done
+      [[ $path = / ]] || path=${path%/}
+    fi
     echo "$path"
     shift
   done
-  test -e "$path"
+  [[ -e $path ]]
 }
 
 
