@@ -46,3 +46,12 @@ add_to_hook () {
 }
 
 PROMPT_COMMAND=libash_hook_handler
+
+# thanks to dualbus!
+command_not_found_handle () {
+  case $1 in
+    git@*) git clone "$@";;   # autoclone
+    *) printf "%s: %s: command not found\n" "$0" "$1" >&2
+      return 127
+  esac
+}
