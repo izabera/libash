@@ -233,4 +233,7 @@ isup () {
 myip () { curl icanhazip.com; }
 
 # create a clean temp dir
-tempdir () { cd "$(mktemp -d ${1+-p "$1"})"; }
+#tempdir () { cd -- "$(mktemp -d ${1+-p "$1"})"; }
+# stupid osx doesn't have mktemp -p
+# portable version thanks to geirha
+tempdir() { cd -- "$(mktemp -d "${1:-${TMPDIR:-/tmp}}/tmp.XXXXXX")"; }
