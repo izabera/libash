@@ -231,3 +231,6 @@ isup () {
 }
 
 myip () { curl icanhazip.com; }
+
+# create a clean temp dir
+tempdir () { cd "$(mktemp -d ${1+-p "$1"})"; }
