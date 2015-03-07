@@ -32,26 +32,22 @@ libash_hook_handler () {
 }
 
 add_to_hook () {
-  (($# != 2)) && return 1
   case $1 in
-    chpwd) chpwd_hook_actions+=("$2");;
-    periodic) periodic_hook_actions+=("$2");;
+    chpwd) shift; chpwd_hook_actions+=("$@");;
+    periodic) shift; periodic_hook_actions+=("$@");;
     *) echo Unknown handle; return 1;;
   esac
   read -erp 'Add permanently? '
   if [[ $REPLY = [Yy]* ]]; then
-    echo "${1}_hook_actions+=(\"$2\")" >> ~/.config/libash
+    echo "${1}_hook_actions+=(\"$@\")" >> ~/.config/libash
   fi
   return 0
 }
 
+_add_to_hook () {
+  COMPREPLY=(git chpwd)
+}
+complete -F _add_to_hook add_to_hook
+
 PROMPT_COMMAND=libash_hook_handler
 
-# thanks to dualbus!
-command_not_found_handle () {
-  case $1 in
-    git@*) git clone "$@";;   # autoclone
-    *) printf "%s: %s: command not found\n" "$0" "$1" >&2
-      return 127
-  esac
-}

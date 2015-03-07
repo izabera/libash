@@ -39,6 +39,9 @@ alias bc='bc -q'
 alias demsgf="dmesg --follow"
 
 
+# ever used ed?   ed is great!
+alias ed='ed -vp:'
+
 
 if shopt -oq vi; then
   alias :{x,{,w}q}{,a}=exit
@@ -77,7 +80,7 @@ pkgmgr=(aptitude apt-get dpkg   #debian
 )
 
 # yes, i know it's awful but please try to understand...
-for pkg in "${pkgmgr[@]}"; do eval alias "\"$pkg\"='sudo \"$pkg\"'"; done
+for pkg in "${pkgmgr[@]}"; do alias "$pkg=sudo $pkg"; done
 
 # pacman wrapper that will ask for a password only when it's needed
 pacman () (

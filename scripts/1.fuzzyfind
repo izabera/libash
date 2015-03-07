@@ -1,0 +1,28 @@
+find () {
+  local fuzzy i args
+  while (($#)); do
+    if [[ $1 = -?(i)fuzzy ]]; then
+      if (( $# > 1 )); then
+        for (( i = 0; i < ${#2}; i++ )); do
+          if [[ ${2:i:1} = []*?[] ]]; then
+            fuzzy+="*\\${2:i:1}"
+          elif [[ ${2:i:1} = \\ ]]; then
+            fuzzy+="*${2:i:2}"
+            ((i++))
+          else
+            fuzzy+="*${2:i:1}"
+          fi
+        done
+        args+=("${1%fuzzy}name" "$fuzzy*")
+        shift
+      else
+        echo "find: missing argument to \`$1'"
+        return 1
+      fi
+    else
+      args+=("$1")
+    fi
+    shift
+  done
+  command find "${args[@]}"
+}

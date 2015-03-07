@@ -1,0 +1,18 @@
+# whoa this was way harder than you'd expect it to be
+git_hook () {
+  local extdebug debugtrap
+  if shopt -q extdebug; then extdebug=true
+  else extdebug=false
+  fi
+
+  shopt -s extdebug
+  debugtrap=$(trap -p DEBUG)
+  trap 'if [[ $BASH_COMMAND = git@* ]]; then git clone "$BASH_COMMAND"; ! :; fi' DEBUG
+
+  # trap -p won't print anything if no trap is set
+  # bash is so helpful -.-
+  if [[ $debugtrap ]]; then eval "$debugtrap"; else trap - DEBUG; fi
+
+  $extdebug || shopt -s extdebug
+}
+

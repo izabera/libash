@@ -15,14 +15,25 @@ PROMPT_COMMAND=
 
 [[ -r /usr/share/bash-completion/bash_completion ]] && . /usr/share/bash-completion/bash_completion
 
-shopt -s extglob globstar
-for file in "$LIBASHDIR/scripts/"!(magicalias) ; do
-  source "$file"
-done
+sourcelibash () {
+  local file array
+  shopt -s extglob globstar
+  # keep. the. order.
+  LC_COLLATE=C eval 'array=("$LIBASHDIR/scripts/"!(*alias|*notready*))'
+  for file in "${array[@]}"; do
+    source "$file"
+  done
+
+  if [[ $- = *i* ]]; then
+    for file in "$LIBASHDIR"/scripts/*alias; do
+      source "$file"
+    done
+  fi
+}
+sourcelibash
 
 # much betta
 TIMEFORMAT=$'\nreal: %lR, user: %lU, sys: %lS'
 
-[[ $- = *i* ]] && source "$LIBASHDIR/scripts/magicalias"
 
 [[ -r ~/.config/libash ]] && source ~/.config/libash
