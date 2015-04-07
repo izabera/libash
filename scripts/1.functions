@@ -3,6 +3,7 @@
 # basic cat replacement that lets you use some editing features
 readinput () {
   while read -r -e || { printf %s "$REPLY"; false; } ; do
+    history -s -- "$REPLY"
     printf '%s\n' "$REPLY"
   done
 }
@@ -34,10 +35,11 @@ uprm () {
 # the /backup directory must exist and be writable
 
 backup () {
-  local sha
-  for file ; do
-    read sha _ <<< $(printf %s "$file" | sha1sum)
-    cp "$file" "/backup/$(date +%Y-%m-%d-%H-%M-%S)-$sha-${file##*/}"
+  local sha file date
+  printf -v date '%(%Y-%m-%d-%H-%M-%S)T'
+  for file; do
+    read sha _ <<< "$(printf %s "$file" | sha1sum)"
+    cp -- "$file" "/backup/$date-$sha-${file##*/}"
   done
 }
 
@@ -46,8 +48,11 @@ backup () {
 # if no parameter is specified, uses PWD
 
 isempty () {
-  local ret=0 files=() argnum=$#
-  (($#)) || set -- "$PWD"
+  local ret=0 files=() argnum=$# ng dg
+  shopt -q nullglob && ng=true || ng=false
+  shopt -q dotglob && dg=true || dg=false
+  shopt -s nullglob dotglob
+  set -- "${@-$PWD}"
   while (($#)); do
     if [[ ! -d $1 ]]; then
       printf '%s is not a directory\n' "$1"
@@ -62,6 +67,8 @@ isempty () {
     fi
     shift
   done
+  "$ng" || shopt -u nullglob
+  "$dg" || shopt -u dotglob
   return "$ret"
 }
 
@@ -236,4 +243,17 @@ myip () { curl icanhazip.com; }
 #tempdir () { cd -- "$(mktemp -d ${1+-p "$1"})"; }
 # stupid osx doesn't have mktemp -p
 # portable version thanks to geirha
-tempdir() { cd -- "$(mktemp -d "${1:-${TMPDIR:-/tmp}}/tmp.XXXXXX")"; }
+tempdir () { cd -- "$(mktemp -d "${1:-${TMPDIR:-/tmp}}/tmp.XXXXXX")"; }
+
+
+# repeat a command
+# usage: loop NUM command [args]
+# repeat forever with a negative NUM
+loop () {
+  [[ $2 ]] || return 1
+  local i
+  for ((i = 0; i < $1 || $1 < 0; i++)); do
+    "${@:2}"
+  done
+}
+

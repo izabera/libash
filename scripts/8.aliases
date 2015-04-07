@@ -11,6 +11,8 @@ alias l='ls -lA'
 alias du='du -h'
 alias df='df -h'
 
+alias ln='ln -v'
+
 alias grep='grep --color=auto'
 alias free='free -h'
 
@@ -37,10 +39,6 @@ alias bc='bc -q'
 
 # this is new in 2.25.something
 alias demsgf="dmesg --follow"
-
-
-# ever used ed?   ed is great!
-alias ed='ed -vp:'
 
 
 if shopt -oq vi; then

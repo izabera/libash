@@ -20,4 +20,4 @@ return_status () {
 
 PS1='\[$green\]\u\[$no_color\]@\[$cyan\]\h\[$no_color\] \[$red\]\w\[$no_color\] \[$(return_status)\]\$\[$no_color\] '
 
-simpleprompt () { PROMPT_COMMAND= PS1='\u@\h \w \$ '; }
+simpleprompt () { PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0; }
