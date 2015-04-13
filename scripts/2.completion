@@ -45,7 +45,7 @@ _vim () {
   while read -r -d ''; do
     # mime type (remove : and leading whitespace)
     read -r _ type;
-    if [[ $type = text* ]]; then
+    if [[ $type = @(text*|inode/x-empty*) ]]; then
       [[ $REPLY = "$HOME"/* && $2 = '~'* ]] && REPLY=${REPLY/"$HOME"/'~'}
       COMPREPLY+=("$REPLY")
     fi
@@ -58,6 +58,7 @@ _vim () {
             whitelist='@(c|h)?(pp)|txt|md|tex|py|sh'
             # don't check these either
             blacklist='png|jp?(e)g|gif|mp[34]|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi'
+            IFS=
             file --mime-type -0 -L -r -- /dev/null "$path"!(*.@($whitelist|$blacklist))
 
             arr=( "$path"*.@($whitelist) )

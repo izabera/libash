@@ -28,6 +28,7 @@ libash_handle_hook () {
 }
 
 libash_hook_handler () {
+  local i
   for i in "${libash_hooks[@]}"; do "$i"_hook && libash_handle_hook "$i"; done
 }
 
