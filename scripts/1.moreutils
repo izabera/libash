@@ -7,9 +7,9 @@
 sponge () {
   # cat a > b   instead of   mv a b
   # slower, but doesn't break hardlinks and doesn't mess with owner and permissions
-  local file=$(mktemp) && \
-  cat > "$file" && \
-  (($#)) && cat "$file" > "$1" || cat "$file" && \
+  local file=$(mktemp)
+  cat > "$file"
+  (($#)) && cat "$file" > "$1" || cat "$file"
   rm "$file"
 }
 

@@ -38,7 +38,7 @@ backup () {
   local sha file date
   printf -v date '%(%Y-%m-%d-%H-%M-%S)T'
   for file; do
-    read sha _ <<< "$(printf %s "$file" | sha1sum)"
+    read sha _ < <(printf %s "$file" | sha1sum)
     cp -- "$file" "/backup/$date-$sha-${file##*/}"
   done
 }
@@ -127,9 +127,10 @@ abspath () {
     # part of this is from lhunath
 
     # test if the directory exist
-    if [[ -d $path ]]; then path=$(cd "$path" && echo "$PWD")
+    if [[ -d $path ]] && path=$(cd "$path" && echo "$PWD"); then :
     # or if it's a file in an existing directory
-    elif [[ -d ${path%/*} ]]; then path=$(cd "${path%/*}" && echo "$PWD/${path##*/}")
+    elif [[ -d ${path%/*} ]] && path=$(cd "${path%/*}" && echo "$PWD/${path##*/}"); then :
+    # need to check if we can cd in it ^
 
     # if we have readlink, use that
     elif readlink -m / >/dev/null 2>&1; then

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+add-num() {
+  # code rewritten by gniourf ^^
+  # make C-x and C-a work like in vim
+  local num
+  if [[ ${READLINE_LINE::READLINE_POINT}${READLINE_LINE:READLINE_POINT:1} =~ -?[[:digit:]]+$ ]]; then
+    ((READLINE_POINT-=${#BASH_REMATCH[0]}-1))
+  fi
+  if [[ ${READLINE_LINE:READLINE_POINT} =~ ^([^[:digit:]-]*)(-?[[:digit:]]+) ]]; then
+    ((READLINE_POINT+=${#BASH_REMATCH[1]}))
+    ((num=10#${READLINE_LINE:READLINE_POINT:${#BASH_REMATCH[2]}}+$1))
+    READLINE_LINE=${READLINE_LINE::READLINE_POINT}$num${READLINE_LINE:READLINE_POINT+${#BASH_REMATCH[2]}}
+    ((READLINE_POINT+=${#num}-1))
+  fi
+}
+
+bind -x '"\C-x":add-num -1' -m vi-move
+bind -x '"\C-a":add-num 1' -m vi-move
