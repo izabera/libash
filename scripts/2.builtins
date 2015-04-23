@@ -1,5 +1,28 @@
 #!/bin/bash
 
+shift () {
+  # make shift work with arrays
+  # if the first argument is a number, use the old shift
+  # or, if it's a valid array name, remove the first n elements and shift the rest
+  if [[ $# -eq 0 || $1 = +([[:digit:]]) ]]; then
+    builtin shift "$@"
+  elif [[ $1 = [[:alpha:]_]*([[:alnum:]_]) && ${2-1} = +([[:digit:]]) && $# -le 2 ]]; then
+    if eval [[ "\${#$1[@]}" -ge "${2-1}" ]]; then
+      eval "$1=(\"\${$1[@]:${2-1}}\")"
+    else
+      # if you try to shift too many elements,
+      # bash doesn't print error messages and just returns 1
+      return 1
+    fi
+  else
+    if [[ $1 != [[:alpha:]_]*([[:alnum:]_]) ]]; then
+      printf "%s: shift: invalid array name\n" "$0" >&2
+    fi
+    printf "%s: shift: usage: shift [array] [n]\n" "$0" >&2
+    return 1
+  fi
+}
+
 pushd () {
   builtin pushd "${@-$HOME}"
 }
