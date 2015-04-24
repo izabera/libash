@@ -1,28 +1,81 @@
-find () {
-  local fuzzy i args
-  while (($#)); do
-    if [[ $1 = -?(i)fuzzy ]]; then
-      if (( $# > 1 )); then
-        for (( i = 0; i < ${#2}; i++ )); do
-          if [[ ${2:i:1} = []*?[] ]]; then
-            fuzzy+="*\\${2:i:1}"
-          elif [[ ${2:i:1} = \\ ]]; then
-            fuzzy+="*${2:i:2}"
-            ((i++))
-          else
-            fuzzy+="*${2:i:1}"
-          fi
-        done
-        args+=("${1%fuzzy}name" "$fuzzy*")
-        shift
+#!/bin/bash
+
+return
+explodeglob () {
+  # a support function that splits a strings in the 'exploded' array
+  exploded=()
+  for (( i = 0; i < ${#2}; i++ )); do  # glob here
+    if [[ ${2:i:1} = '\' ]]; then
+      if (( escaped )); then
+        fuzzy+="*\\"
+        escaped=0
       else
-        echo "find: missing argument to \`$1'"
-        return 1
+        escaped=1
       fi
-    else
-      args+=("$1")
+    elif [[ ${2:i:1} = ['[*?]'] ]]; then # weirdly quoted because of vim's broken syntax hl -_-
+      if (( escaped )); then
+        fuzzy+="*\\"
+      else
+        escaped=1
+      fi
+    fi
+    #inglob=1 fuzzy+="${2:i:1}"
+    #elif [[ ${2:i:1} = \\ ]]; then
+    #fuzzy+="*${2:i:2}"
+    #((i++))
+    #else
+    #fuzzy+="*${2:i:1}"
+    #fi
+  done
+}
+
+find () {
+  local fuzzy i args newargs opts optcount option inbrkt
+  # add moar if needed
+  args=(name     iname     path   ipath     user   nouser  group   nogroup
+        perm     prune     size   xdev      links  atime   ctime   mtime
+        newer    mindepth  depth  maxdepth  type   print   print0  exec
+        execdir  ok        okdir)
+  # number of options for the arguments
+  # if the no. is -1, read until a terminator is found
+  opts=(1        1         1      1         1      0       1       0
+        1        0         1      0         1      1       1       1
+        1        1         0      1         1      0       0       -1
+        -1       0         0)
+  args=([name]=1 [iname]=1 [path]=1 [ipath]=1 [user]=1 [nouser]=0 [group]=1 [nogroup]=0
+        [perm]=1 [prune]=0 [size]=1 [xdev]=0 [links]=1 [atime]=1 [ctime]=1 [mtime]=1
+        [newer]=1 [mindepth]=1 [depth]=0 [maxdepth]=1 [type]=1 [print]=0 [print0]=0
+        [exec]="-1,{} +,;" [execdir]="-1,{} +,;" [ok]=0 [okdir]=0)   # i can't think of a way that doesn't suck
+  while (($#)); do
+    # if option is 0, we're not in the options of an argument
+    # if it's 1, we're in regular options
+    if [[ $option = 0 ]]; then
+      if [[$1 = -* ]]; then
+        if [[ -v args['${1#-}'] ]]; then
+          newargs+=("$1")
+          optcount=0
+          option=${args[$1]}
+        elif [[ $1 = -?(i)fuzzy ]]; then
+          if (( $# > 1 )); then
+            explodeglob "$2"
+            IFS=* eval 'fuzzy="${exploded[@]}"'
+            newargs+=("${1%fuzzy}name" "$fuzzy*")
+            shift
+          else
+            echo "find: missing argument to \`$1'"
+            return 1
+          fi
+        fi
+      else
+        newargs+=("$1")
+      fi # $1 = -*
+    elif [[ $option != -1 ]]; then # option isn't 0 or 1
+      newargs+=("$1")
+      (( optcount ++ ))
+      if (( optcount == option ))
+      fi
     fi
     shift
   done
-  command find "${args[@]}"
+  command find "${newargs[@]}"
 }
