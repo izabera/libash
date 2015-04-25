@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-blue=$(tput setaf 4)
 red=$(tput setaf 1)
 green=$(tput setaf 2)
+yellow=$(tput setaf 3)
+blue=$(tput setaf 4)
+magenta=$(tput setaf 5)
 cyan=$(tput setaf 6)
 white=$(tput setaf 7)
-yellow=$(tput setaf 3)
 no_color=$(tput sgr 0)
-
-#PROMPT_COMMAND='chpwd_hook'
+colors=("$red" "$green" "$yellow" "$blue" "$magenta" "$cyan" "$white" "$no_color")
 
 return_value () {
   (( $? == 0 )) && printf %s%d%s "$green" "$?" "$no_color" || printf %s%d%s "$red" "$?" "$no_color"
@@ -18,6 +18,10 @@ return_status () {
   (( $? == 0 )) && printf %s "$green" || printf %s "$red"
 }
 
-PS1='\[$green\]\u\[$no_color\]@\[$cyan\]\h\[$no_color\] \[$red\]\w\[$no_color\] \[$(return_status)\]\$\[$no_color\] '
+#PS1='\[$green\]\u\[$no_color\]@\[$cyan\]\h\[$no_color\] \[$red\]\w\[$no_color\] \[$(return_status)\]\$\[$no_color\] '
+
+# got the array idea from greycat
+PS1='\[$green\]\u\[$no_color\]@\[$cyan\]\h\[$no_color\] \[$red\]\w\[$no_color\] \[${colors[!$?]}\]\$\[$no_color\] '
+# !$? to map 0->1 nonzero->0
 
 simpleprompt () { PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0; }
