@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-mkdir -p /tmp/libash
+[[ -d /tmp/libash ]] && mkdir -p /tmp/libash
 
 # reset sane defaults
 PS1='\u@\h \w \$ '
@@ -13,7 +13,22 @@ PROMPT_COMMAND=
 # case insensitive matching and completion
 # LIBASH_CASE=no
 
-[[ -r /usr/share/bash-completion/bash_completion ]] && . /usr/share/bash-completion/bash_completion
+# don't source it again
+if [[ ! ${!BASH_COMPLETION*} ]]; then
+  BASH_COMPLETION_locations=(
+    # a few possible places, add more if needed
+    /usr/share/bash-completion/bash_completion
+    /etc/bash_completion
+  )
+  for BASH_COMPLETION_location in "${BASH_COMPLETION_locations[@]}"; do
+    if [[ -r $BASH_COMPLETION_location ]]; then
+      . "$BASH_COMPLETION_location"
+      break
+    fi
+  done
+  unset BASH_COMPLETION_location{,s}
+fi
+
 
 sourcelibash () {
   local file array
