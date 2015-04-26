@@ -1,27 +1,36 @@
 #!/usr/bin/env bash
 
-red=$(tput setaf 1)
-green=$(tput setaf 2)
-yellow=$(tput setaf 3)
-blue=$(tput setaf 4)
-magenta=$(tput setaf 5)
-cyan=$(tput setaf 6)
-white=$(tput setaf 7)
-no_color=$(tput sgr 0)
-colors=("$red" "$green" "$yellow" "$blue" "$magenta" "$cyan" "$white" "$no_color")
+# saving colors to avoid having to use tput again
+if [[ -r /tmp/libash/colors ]]; then
+  . /tmp/libash/colors
+  declare -gr _black=$_black _red=$_red _green=$_green _yellow=$_yellow _blue=$_blue _magenta=$_magenta _cyan=$_cyan _white=$_white _no_color=$_no_color _colors=("${_colors[@]}")
+else
+  _black=$(tput setaf 0)
+  _red=$(tput setaf 1)
+  _green=$(tput setaf 2)
+  _yellow=$(tput setaf 3)
+  _blue=$(tput setaf 4)
+  _magenta=$(tput setaf 5)
+  _cyan=$(tput setaf 6)
+  _white=$(tput setaf 7)
+  _no_color=$(tput sgr 0)
+  _colors=("$_black" "$_red" "$_green" "$_yellow" "$_blue" "$_magenta" "$_cyan" "$_white" "$_no_color")
+  # declare -p doesn't show the -g attribute
+  declare -p _black _red _green _yellow _blue _magenta _cyan _white _no_color _colors > /tmp/libash/colors
+  declare -gr _black=$_black _red=$_red _green=$_green _yellow=$_yellow _blue=$_blue _magenta=$_magenta _cyan=$_cyan _white=$_white _no_color=$_no_color _colors=("${_colors[@]}")
+fi
 
 return_value () {
-  (( $? == 0 )) && printf %s%d%s "$green" "$?" "$no_color" || printf %s%d%s "$red" "$?" "$no_color"
+  (( $? == 0 )) && printf %s%d%s "$_green" "$?" "$_no_color" || printf %s%d%s "$_red" "$?" "$_no_color"
 }
 
 return_status () {
-  (( $? == 0 )) && printf %s "$green" || printf %s "$red"
+  (( $? == 0 )) && printf %s "$_green" || printf %s "$_red"
 }
 
-#PS1='\[$green\]\u\[$no_color\]@\[$cyan\]\h\[$no_color\] \[$red\]\w\[$no_color\] \[$(return_status)\]\$\[$no_color\] '
+#PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]\w\[$_no_color\] \[$(return_status)\]\$\[$_no_color\] '
 
 # got the array idea from greycat
-PS1='\[$green\]\u\[$no_color\]@\[$cyan\]\h\[$no_color\] \[$red\]\w\[$no_color\] \[${colors[!$?]}\]\$\[$no_color\] '
-# !$? to map 0->1 nonzero->0
+PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]\w\[$_no_color\] \[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
 
 simpleprompt () { PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0; }
