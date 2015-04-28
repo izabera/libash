@@ -50,5 +50,3 @@ _add_to_hook () {
 }
 complete -F _add_to_hook add_to_hook
 
-PROMPT_COMMAND=libash_hook_handler
-

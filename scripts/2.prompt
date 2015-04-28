@@ -28,9 +28,55 @@ return_status () {
   (( $? == 0 )) && printf %s "$_green" || printf %s "$_red"
 }
 
+# /path/to/dir  ->  /p/t/dir
+simple_collapsed_wd () {
+  local cwd dir i
+  cwd=$PWD/
+  IFS=/ read -ra cwd <<< "${cwd/#$HOME\//\~/}"
+  if [[ $cwd ]]; then
+    shortcwd="~"
+  else
+    shortcwd= # if it was empty, the path starts with /
+  fi
+  for (( i = 1; i < ${#cwd[@]}; i ++ )); do
+    shortcwd+=/${cwd[i]::1}
+  done
+  [[ $shortcwd = */?* ]] && shortcwd=${shortcwd%/*}/${cwd[@]: -1}
+}
+
+# /path/to/dir  ->  /p/t/dir
+# handles collisions correctly!
+collapsed_wd () {
+  local cwd dir i j pathsofar ambiguous ng dg
+  shopt -q nullglob; ng=$?; shopt -s nullglob
+  shopt -q dotglob; dg=$?; shopt -s dotglob
+  cwd=$PWD/
+  IFS=/ read -ra cwd <<< "${cwd/#$HOME\//\~/}"
+  if [[ $cwd ]]; then
+    shortcwd="~" pathsofar=$HOME
+  else
+    shortcwd= # if it was empty, the path starts with /
+  fi
+  for (( i = 1; i < ${#cwd[@]}; i ++ )); do
+    pathsofar+=/
+    for (( j = 0; j < ${#cwd[i]}; j ++ )); do
+      pathsofar+=${cwd[i]:j:1}
+      ambiguous=("$pathsofar"*)  # this is wrong if $PWD is not an existing path BUT THAT'S YOUR FAULT
+      [[ ${#ambiguous[@]} -eq 1 ]] && break
+    done
+    shortcwd+=/${pathsofar##*/}
+    pathsofar=${pathsofar%/*}/${cwd[i]}
+  done
+  [[ $shortcwd = */?* ]] && shortcwd=${shortcwd%/*}/${cwd[@]: -1}
+  (( ng )) && shopt -u nullglob
+  (( dg )) && shopt -u dotglob
+}
+
 #PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]\w\[$_no_color\] \[$(return_status)\]\$\[$_no_color\] '
 
 # got the array idea from greycat
-PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]\w\[$_no_color\] \[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
+PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]$shortcwd\[$_no_color\] \[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
+PROMPT_COMMAND='collapsed_wd; libash_hook_handler'
+
 
 simpleprompt () { PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0; }
