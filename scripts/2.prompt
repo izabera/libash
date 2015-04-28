@@ -61,7 +61,7 @@ collapsed_wd () {
     pathsofar+=/
     for (( j = 0; j < ${#cwd[i]}; j ++ )); do
       pathsofar+=${cwd[i]:j:1}
-      ambiguous=("$pathsofar"*)  # this is wrong if $PWD is not an existing path BUT THAT'S YOUR FAULT
+      ambiguous=("$pathsofar"*/)  # this is wrong if $PWD is not an existing path BUT THAT'S YOUR FAULT
       [[ ${#ambiguous[@]} -eq 1 ]] && break
     done
     shortcwd+=/${pathsofar##*/}
