@@ -95,7 +95,7 @@ pacman () (
       fi
     done
     "$needroot"
-  } ; then sudo pacman "$@" 3>&2 2>&1 1>&3 3>&- ; else exit $PIPESTATUS ; fi
+  } ; then sudo pacman "$@" 3>&2 2>&1 1>&3 3>&- ; else exit "$PIPESTATUS" ; fi
 )
 
 make () {

@@ -71,9 +71,9 @@ _vim () {
   # workaround, not perfect
   if [[ $2 = '~' ]]; then
     shopt -s nullglob
-    local dirs=(~/*/)
+    local dirs=(~/*/) tilde="~"
     shopt -u nullglob
-    dirs=("${dirs[@]%/}") dirs=("${dirs[@]/"$HOME"/'~'}")
+    dirs=("${dirs[@]%/}") dirs=("${dirs[@]/#"$HOME"/$tilde}")
     COMPREPLY+=("${dirs[@]}")
   fi
 }

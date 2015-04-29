@@ -13,7 +13,8 @@
 aringa-helper () {
   history 1 | {
     read -r _ _ command
-    dir=${PWD/#"$HOME"/\~\/} dir=${dir/\/}
+    tilde="~"
+    dir=${PWD/#"$HOME"/$tilde} dir=${dir/\/}
     {
       printf '%s@%s %s $ %s\n' "$USER" "$HOSTNAME" "$dir" "$command"
       eval "$command"
@@ -54,15 +55,13 @@ mispipe-helper () {
     # note to self on PIPESTATUS:
     # eval 'pipeline'  won't put the values in PIPESTATUS 
     # also, you can't retrieve the values one at a time
-    # so i save them in a tmp file
-    # (it's not so bad, provided you don't actually write to /tmp/pipestatus in that pipeline)
-    secondpart='printf %d\\n ${PIPESTATUS[@]} > /tmp/libash/pipestatus'
-    command=$command$'\n'$secondpart
-    eval "$command"
-    status=()
-    mapfile -t status < /tmp/libash/pipestatus
-    [[ ${status[$num]} ]] && return ${status[$num]} || return ${status[-1]}
+
+    # osse found a decent solution that doesn't involve temp files
+    eval "$command; status=(\"\${PIPESTATUS[@]}\")"
+
+    [[ ${status[num]} ]] && return ${status[num]} || return ${status[-1]}
   }
 }
+# doesn't work with heredocs
 alias mispipe='mispipe-helper #'
 

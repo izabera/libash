@@ -262,8 +262,7 @@ loop () {
 # make shift work with arrays
 # usage: arrshift array [n]
 arrshift () {
-  # if the first argument is a number, use the old shift
-  # or, if it's a valid array name, remove the first n elements and shift the rest
+  # if the first argument is a valid array name, remove the first n elements and shift the rest
   if [[ $1 = [[:alpha:]_]*([[:alnum:]_]) && ${2-1} = +([[:digit:]]) && $# -le 2 ]]; then
     if eval [[ "\${#$1[@]}" -ge "${2-1}" ]]; then
       eval "$1=(\"\${$1[@]:${2-1}}\")"

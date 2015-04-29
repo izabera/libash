@@ -30,6 +30,8 @@ if [[ ! ${!BASH_COMPLETION*} ]]; then
 fi
 
 
+export LIBASHDIR=${LIBASHDIR=$BASH_SOURCE}
+
 sourcelibash () {
   local file array
   shopt -s extglob globstar
