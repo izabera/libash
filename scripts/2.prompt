@@ -3,7 +3,7 @@
 # saving colors to avoid having to use tput again
 if [[ -r /tmp/libash/colors ]]; then
   . /tmp/libash/colors
-  declare -gr _black=$_black _red=$_red _green=$_green _yellow=$_yellow _blue=$_blue _magenta=$_magenta _cyan=$_cyan _white=$_white _no_color=$_no_color _colors=("${_colors[@]}")
+  #declare -gr _black=$_black _red=$_red _green=$_green _yellow=$_yellow _blue=$_blue _magenta=$_magenta _cyan=$_cyan _white=$_white _no_color=$_no_color _colors=("${_colors[@]}")
 else
   _black=$(tput setaf 0)
   _red=$(tput setaf 1)
@@ -15,9 +15,23 @@ else
   _white=$(tput setaf 7)
   _no_color=$(tput sgr 0)
   _colors=("$_black" "$_red" "$_green" "$_yellow" "$_blue" "$_magenta" "$_cyan" "$_white" "$_no_color")
+  {
+    printf '%s=%q\n' _black    "$_black"    \
+                     _red      "$_red"      \
+                     _green    "$_green"    \
+                     _yellow   "$_yellow"   \
+                     _blue     "$_blue"     \
+                     _magenta  "$_magenta"  \
+                     _cyan     "$_cyan"     \
+                     _white    "$_white"    \
+                     _no_color "$_no_color"
+    for i in "${!_colors[@]}"; do
+      printf '_colors[%s]=%q\n' "$i" "${_colors[i]}"
+    done
+  } > /tmp/libash/colors
   # declare -p doesn't show the -g attribute
-  declare -p _black _red _green _yellow _blue _magenta _cyan _white _no_color _colors > /tmp/libash/colors
-  declare -gr _black=$_black _red=$_red _green=$_green _yellow=$_yellow _blue=$_blue _magenta=$_magenta _cyan=$_cyan _white=$_white _no_color=$_no_color _colors=("${_colors[@]}")
+  #declare -p _black _red _green _yellow _blue _magenta _cyan _white _no_color _colors > /tmp/libash/colors
+  #declare -gr _black=$_black _red=$_red _green=$_green _yellow=$_yellow _blue=$_blue _magenta=$_magenta _cyan=$_cyan _white=$_white _no_color=$_no_color _colors=("${_colors[@]}")
 fi
 
 return_value () {

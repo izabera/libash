@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-[[ -d /tmp/libash ]] && mkdir -p /tmp/libash
+[[ -d /tmp/libash ]] || mkdir -p /tmp/libash
 
 # reset sane defaults
 PS1='\u@\h \w \$ '
@@ -33,7 +33,7 @@ fi
 export LIBASHDIR=${LIBASHDIR=$BASH_SOURCE}
 
 sourcelibash () {
-  local file array
+  local file array i # i can be used in the sourced files (so far, only 2.prompt)
   shopt -s extglob globstar
   # keep. the. order.
   LC_COLLATE=C eval 'array=("$LIBASHDIR/scripts/"!(*alias|*notready*))'
