@@ -44,7 +44,7 @@ return_status () {
 
 # /path/to/dir  ->  /p/t/dir
 simple_collapsed_wd () {
-  local cwd dir i tilde
+  local cwd i tilde
   cwd=$PWD/ tilde="~"
   IFS=/ read -ra cwd <<< "${cwd/#"$HOME"\//$tilde/}"
   if [[ $cwd ]]; then
@@ -61,7 +61,7 @@ simple_collapsed_wd () {
 # /path/to/dir  ->  /p/t/dir
 # handles collisions correctly!
 collapsed_wd () {
-  local cwd tilde dir i j pathsofar ambiguous ng dg
+  local cwd tilde i j pathsofar ambiguous ng dg
   shopt -q nullglob; ng=$?; shopt -s nullglob
   shopt -q dotglob; dg=$?; shopt -s dotglob
   cwd=$PWD/ tilde="~" # bash didn't perform quote removal in the replacement until 4.3
@@ -82,8 +82,32 @@ collapsed_wd () {
     pathsofar=${pathsofar%/*}/${cwd[i]}
   done
   [[ $shortcwd = */?* ]] && shortcwd=${shortcwd%/*}/${cwd[@]: -1}
+
   (( ng )) && shopt -u nullglob
   (( dg )) && shopt -u dotglob
+
+  # now shorten it further with PROMPT_DIRTRIM
+  IFS=/ read -ra cwd <<< "$shortcwd"
+  pathsofar=${cwd[-1]}
+  unset "cwd[-1]"
+  if [[ $PROMPT_DIRTRIM = +([[:digit:]]) && 10#$PROMPT_DIRTRIM -gt 0 ]]; then
+    if [[ $shortcwd = "~" || $shortcwd = / ]]; then
+      return
+    elif [[ $shortcwd = "~"/* ]]; then
+      for (( i = 1; i < 10#$PROMPT_DIRTRIM && ${#cwd[@]} > 1; i++ )); do
+        pathsofar=${cwd[-1]}/$pathsofar
+        unset "cwd[-1]"
+      done
+      [[ "~/$pathsofar" != "$shortcwd" ]] && shortcwd="~/.../$pathsofar"
+    else
+      [[ -z $cwd && ${#cwd[@]} -le PROMPT_DIRTRIM ]] && return
+      for (( i = 1; i < 10#$PROMPT_DIRTRIM && ${#cwd[@]} > 1; i++ )); do
+        pathsofar=${cwd[-1]}/$pathsofar
+        unset "cwd[-1]"
+      done
+      [[ "$pathsofar" != "$shortcwd" ]] && shortcwd="/.../$pathsofar"
+    fi
+  fi
 }
 
 #PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]\w\[$_no_color\] \[$(return_status)\]\$\[$_no_color\] '
