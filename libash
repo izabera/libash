@@ -29,12 +29,12 @@ if [[ ! ${!BASH_COMPLETION*} ]]; then
   unset BASH_COMPLETION_location{,s}
 fi
 
+shopt -s extglob globstar cdspell
 
 export LIBASHDIR=${LIBASHDIR=$BASH_SOURCE}
 
 sourcelibash () {
   local file array i # i can be used in the sourced files (so far, only 2.prompt)
-  shopt -s extglob globstar
   # keep. the. order.
   LC_COLLATE=C eval 'array=("$LIBASHDIR/scripts/"!(*alias|*notready*))'
   for file in "${array[@]}"; do

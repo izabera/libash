@@ -88,22 +88,22 @@ collapsed_wd () {
 
   # now shorten it further with PROMPT_DIRTRIM
   IFS=/ read -ra cwd <<< "$shortcwd"
-  pathsofar=${cwd[-1]}
-  unset "cwd[-1]"
+  pathsofar=${cwd[${#cwd[@]}-1]}
+  unset "cwd[${#cwd[@]}-1]"
   if [[ $PROMPT_DIRTRIM = +([[:digit:]]) && 10#$PROMPT_DIRTRIM -gt 0 ]]; then
     if [[ $shortcwd = "~" || $shortcwd = / ]]; then
       return
     elif [[ $shortcwd = "~"/* ]]; then
       for (( i = 1; i < 10#$PROMPT_DIRTRIM && ${#cwd[@]} > 1; i++ )); do
-        pathsofar=${cwd[-1]}/$pathsofar
-        unset "cwd[-1]"
+        pathsofar=${cwd[${#cwd[@]}-1]}/$pathsofar
+        unset "cwd[${#cwd[@]}-1]"
       done
       [[ "~/$pathsofar" != "$shortcwd" ]] && shortcwd="~/.../$pathsofar"
     else
       [[ -z $cwd && ${#cwd[@]} -le PROMPT_DIRTRIM ]] && return
       for (( i = 1; i < 10#$PROMPT_DIRTRIM && ${#cwd[@]} > 1; i++ )); do
-        pathsofar=${cwd[-1]}/$pathsofar
-        unset "cwd[-1]"
+        pathsofar=${cwd[${#cwd[@]}-1]}/$pathsofar
+        unset "cwd[${#cwd[@]}-1]"
       done
       [[ "$pathsofar" != "$shortcwd" ]] && shortcwd="/.../$pathsofar"
     fi
