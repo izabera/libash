@@ -167,7 +167,7 @@ alarm () {
 
   local alarm=${1:-"$ALARMTIME"}
   [[ $alarm = ??:?? ]] || {
-    echo 'Usage: $0 [HH:MM [message [command args...]]]' >&2
+    echo "Usage: $0 [HH:MM [message [command args...]]]" >&2
     return 1
   }
 

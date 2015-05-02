@@ -34,19 +34,19 @@ libash_compgen () {
 
 # avoid opening binary files / pictures with vim
 _vim () {
-  local type path
+  local type path tilde="~" ng REPLY
   case $2 in
     '~') path=$HOME;;
-    '~/'*) path=${2/'~'/"$HOME"};;
+    '~/'*) path=${2/$tilde/$HOME};;
     *) path=$2;;
   esac
-  [[ -d $path ]] && path=${path%/}/
+  [[ -d $path && $path != @(.|..) ]] && path=${path%/}/
   # read filename
   while read -r -d ''; do
     # mime type (remove : and leading whitespace)
     read -r _ type;
     if [[ $type = @(text*|inode/x-empty*) ]]; then
-      [[ $REPLY = "$HOME"/* && $2 = '~'* ]] && REPLY=${REPLY/"$HOME"/'~'}
+      [[ $REPLY = "$HOME"/* && $2 = '~'* ]] && REPLY=${REPLY/"$HOME"/$tilde}
       COMPREPLY+=("$REPLY")
     fi
   done < <(
@@ -55,14 +55,30 @@ _vim () {
             fi
             shopt -s nullglob
             # don't check these, add them by default
-            whitelist='@(c|h)?(pp)|txt|md|tex|py|sh'
+            whitelist='@(c|h)?(pp)|txt|md|tex|py|pl|sh'
             # don't check these either
             blacklist='png|jp?(e)g|gif|mp[34]|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi'
-            IFS=
-            file --mime-type -0 -L -r -- /dev/null "$path"!(*.@($whitelist|$blacklist))
 
-            arr=( "$path"*.@($whitelist) )
+            # just assume that log files are ok to open
+            # even if they end in something like .weechatlog
+            # and contain control characters (irc colors)
+            arr=( "$path"*.@($whitelist) "$path"*log )
             (( ${#arr[@]} )) && printf '%s\0: text\n' "${arr[@]}"
+
+            # try to find scripts
+            arr=("$path"!(*.@($whitelist|$blacklist)|*log))
+            LANG=C
+            for file in "${!arr[@]}"; do
+              [[ -f ${arr[file]} ]] || continue
+              IFS= read -rn2 -d '' < "${arr[file]}"
+              if [[ $REPLY = "#!" ]]; then
+                printf '%s\0: text\n' "${arr[file]}"
+                unset "arr[file]"
+              fi
+            done
+
+            # then use file --mime-type on what's left
+            file --mime-type -0 -L -r -- /dev/null "${arr[@]}"
             )
 
   # FIXME
@@ -70,9 +86,9 @@ _vim () {
 
   # workaround, not perfect
   if [[ $2 = '~' ]]; then
-    shopt -s nullglob
-    local dirs=(~/*/) tilde="~"
-    shopt -u nullglob
+    shopt -q nullglob; ng=$?; shopt -s nullglob
+    local dirs=(~/*/)
+    (( ng )) && shopt -u nullglob
     dirs=("${dirs[@]%/}") dirs=("${dirs[@]/#"$HOME"/$tilde}")
     COMPREPLY+=("${dirs[@]}")
   fi
@@ -81,16 +97,52 @@ _vim () {
 complete -o plusdirs -F _vim vim
 
 # use this in case file fails detect a file as text
-# or in huge directories with thousands of file
+# or in huge directories with thousands of files
 alias __vim=vim
+# probably never needed, it's quite fast now
 
+
+# only complete shell scripts
+_shellcheck () {
+  local type path tilde="~" REPLY ng whitelist blacklist file
+  case $2 in
+    '~') path=$HOME;;
+    '~/'*) path=${2/$tilde/$HOME};;
+    *) path=$2;;
+  esac
+  [[ -d $path && $path != @(.|..) ]] && path=${path%/}/
+  local blacklist='@(c|h)?(pp)|tex|pl|md|py|png|jp?(e)g|gif|mp[34]|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi'
+  local whitelist='?(?(b|d)a|?(m)k|z)sh'
+
+  shopt -q nullglob; ng=$?; shopt -s nullglob
+  COMPREPLY=("$path"*.@($whitelist))
+
+  for file in "$path"!(*.@($whitelist|$blacklist)); do
+    [[ -f $file ]] || continue
+
+    # check the shebang line
+    read -rN 64 < "$file"
+    [[ $REPLY = "#!"*([[:blank:]])@(*/bin/|/usr/bin/env+([[:blank:]]))?(?(b|d)a|?(m)k|z)sh* ]] && COMPREPLY+=("$file")
+  done
+
+  if [[ $2 = '~' ]]; then
+    local dirs=(~/*/)
+    dirs=("${dirs[@]%/}") dirs=("${dirs[@]/#"$HOME"/$tilde}")
+    COMPREPLY+=("${dirs[@]}")
+  fi
+  (( ng )) && shopt -u nullglob
+}
+
+complete -o plusdirs -F _shellcheck shellcheck
 
 
 _busybox () {
+  type -P busybox > /dev/null || return
+  [[ -f /tmp/libash/busybox ]] || busybox --list | tr ' ' '\n' > /tmp/libash/busybox
   if (( ${#COMP_WORDS[@]} < 3 )); then
     while read -r; do
       [[ $REPLY = "$2"* ]] && COMPREPLY+=("$REPLY")
-    done < <(busybox --list)
+    done < /tmp/libash/busybox
   else
     compopt -o bashdefault
     compopt -o default
@@ -100,10 +152,12 @@ _busybox () {
 complete -F _busybox busybox
 
 _toybox () {
+  type -P toybox > /dev/null || return
+  [[ -f /tmp/libash/toybox ]] || toybox | tr ' ' '\n' > /tmp/libash/toybox
   if (( ${#COMP_WORDS[@]} < 3 )); then
     while read -r; do
       [[ $REPLY = "$2"* ]] && COMPREPLY+=("$REPLY")
-    done < <(toybox | tr ' ' '\n')
+    done < /tmp/libash/toybox
   else
     compopt -o bashdefault
     compopt -o default
