@@ -79,6 +79,7 @@ _vim () {
 
             # then use file --mime-type on what's left
             file --mime-type -0 -L -r -- /dev/null "${arr[@]}"
+            # and then >>>let's<<< add this random line with a single quote because of a bug in procsub fixed in 4.3
             )
 
   # FIXME
@@ -138,7 +139,7 @@ complete -o plusdirs -F _shellcheck shellcheck
 
 _busybox () {
   type -P busybox > /dev/null || return
-  [[ -f /tmp/libash/busybox ]] || busybox --list | tr ' ' '\n' > /tmp/libash/busybox
+  [[ -f /tmp/libash/busybox ]] || busybox --list > /tmp/libash/busybox
   if (( ${#COMP_WORDS[@]} < 3 )); then
     while read -r; do
       [[ $REPLY = "$2"* ]] && COMPREPLY+=("$REPLY")
