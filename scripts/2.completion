@@ -103,14 +103,50 @@ alias __vim=vim
 # probably never needed, it's quite fast now
 
 
-# only complete shell scripts
+# only complete shell scripts and options
 _shellcheck () {
-  local type path tilde="~" REPLY ng whitelist blacklist file
+  local type path tilde="~" REPLY ng whitelist blacklist file IFS=$' \t\n'
   case $2 in
     '~') path=$HOME;;
     '~/'*) path=${2/$tilde/$HOME};;
     *) path=$2;;
   esac
+
+  # parse options
+  local inopt=false i end=false
+  # stop one word before
+  for (( i = 1; i < COMP_CWORD; i++ )); do
+    # check if we need an option or a filename
+    case ${COMP_WORDS[i]} in
+      # only check the options that need extra args
+      # ignore options like -eSCxxxx,SCyyyy
+      -@(e|f|s)|--@(exclude|format|shell)) inopt=true ;;
+      --) end=true; break ;;
+      [!-]*) if ! "$inopt"; then
+               end=true
+               break
+             else
+               inopt=false
+             fi
+    esac
+  done
+  if "$inopt"; then # we're processing an argument to an option
+    # we're after an option, completing an empty word
+    case $3 in # previous
+      # --exclude is not completed
+      -f|--format) COMPREPLY=(checkstyle gcc json tty) ;;
+      -s|--shell) COMPREPLY=(bash sh ksh)
+    esac
+    compopt +o plusdirs
+    return
+  elif ! "$end" && [[ $2 = -* ]]; then # we're processing a new option
+    for i in -e -f -s -V --version --exclude= --format= --shell=; do
+      [[ $i = "$2"* ]] && COMPREPLY+=("$i") && compopt -o nospace
+    done
+    compopt +o plusdirs
+    return
+  fi # end of option parsing
+
   [[ -d $path && $path != @(.|..) ]] && path=${path%/}/
   local blacklist='@(c|h)?(pp)|tex|pl|md|py|png|jp?(e)g|gif|mp[34]|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi'
   local whitelist='?(?(b|d)a|?(m)k|z)sh'
@@ -122,7 +158,7 @@ _shellcheck () {
     [[ -f $file ]] || continue
 
     # check the shebang line
-    read -rN 64 < "$file"
+    read -rn 64 < "$file"
     [[ $REPLY = "#!"*([[:blank:]])@(*/bin/|/usr/bin/env+([[:blank:]]))?(?(b|d)a|?(m)k|z)sh* ]] && COMPREPLY+=("$file")
   done
 
