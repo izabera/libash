@@ -137,19 +137,18 @@ _shellcheck () {
       -f|--format) COMPREPLY=(checkstyle gcc json tty) ;;
       -s|--shell) COMPREPLY=(bash sh ksh)
     esac
-    compopt +o plusdirs
     return
   elif ! "$end" && [[ $2 = -* ]]; then # we're processing a new option
     for i in -e -f -s -V --version --exclude= --format= --shell=; do
       [[ $i = "$2"* ]] && COMPREPLY+=("$i") && compopt -o nospace
     done
-    compopt +o plusdirs
     return
   fi # end of option parsing
 
+  compopt -o plusdirs
   [[ -d $path && $path != @(.|..) ]] && path=${path%/}/
   local blacklist='@(c|h)?(pp)|tex|pl|md|py|png|jp?(e)g|gif|mp[34]|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi'
-  local whitelist='?(?(b|d)a|?(m)k|z)sh'
+  local whitelist='?(?(b|d)a|?(m)k|z)sh?(rc)'
 
   shopt -q nullglob; ng=$?; shopt -s nullglob
   COMPREPLY=("$path"*.@($whitelist))
@@ -170,7 +169,7 @@ _shellcheck () {
   (( ng )) && shopt -u nullglob
 }
 
-complete -o plusdirs -F _shellcheck shellcheck
+complete -F _shellcheck shellcheck
 
 
 _busybox () {
