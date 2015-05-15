@@ -282,3 +282,21 @@ arrshift () {
   fi
 }
 
+# use it to cleanup a dir
+# usage: dircleanup [dir [glob]]
+dircleanup () {
+  local file opt IFS= quote="'\''"
+  for file in "${1-.}"/${2-*}; do
+    [[ -e $file ]] || return 1
+    file -- "$file"
+    select opt in head less "${EDITOR-vi}" rm skip custom; do
+      case $opt in
+        head|less|"${EDITOR-vi}"|rm) "$opt" -- "$file" ;;&
+        # todo: find a good way to print files with quotes and consider using read without -r
+        custom) read -rep 'Type your command: ' -i "rm -- '${file//\'/$quote}'" && eval "$REPLY" ;;&
+        *) break
+      esac
+    done
+  done
+}
+
