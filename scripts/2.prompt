@@ -114,7 +114,26 @@ collapsed_wd () {
 
 # got the array idea from greycat
 PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]$shortcwd\[$_no_color\] \[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
-PROMPT_COMMAND='collapsed_wd; libash_hook_handler'
+PROMPT_COMMAND='collapsed_wd; libash_hook_handler; undefC-cC-z'
 
+undefC-cC-z () {
+  (( ! libash_prompt )) && command stty intr undef susp undef
+  libash_prompt=1
+}
+resetC-cC-z () {
+  (( libash_prompt )) && command stty "$saved_stty"
+  libash_prompt=0
+}
 
-simpleprompt () { PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0; }
+saved_stty=$(command stty -g)
+trap resetC-cC-z DEBUG
+
+bind '\C-z: "\C-cfg\C-m"' '\C-c: kill-whole-line'
+
+stty () {
+  command stty "$@"
+  saved_stty=$(command stty -g)
+}
+
+simpleprompt () { trap - DEBUG; PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0; }
+
