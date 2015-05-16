@@ -112,28 +112,44 @@ collapsed_wd () {
 
 #PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]\w\[$_no_color\] \[$(return_status)\]\$\[$_no_color\] '
 
+simpleprompt () { trap - DEBUG; PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0; }
+
 # got the array idea from greycat
 PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]$shortcwd\[$_no_color\] \[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
-PROMPT_COMMAND='collapsed_wd; libash_hook_handler; undefC-cC-z'
-
-undefC-cC-z () {
-  (( ! libash_prompt )) && command stty intr undef susp undef
-  libash_prompt=1
-}
-resetC-cC-z () {
-  (( libash_prompt )) && command stty "$saved_stty"
-  libash_prompt=0
-}
 
 saved_stty=$(command stty -g)
-trap resetC-cC-z DEBUG
-
-bind '\C-z: "\C-cfg\C-m"' '\C-c: kill-whole-line'
-
 stty () {
+  local status
   command stty "$@"
+  status=$?
   saved_stty=$(command stty -g)
+  return "$status"
 }
 
-simpleprompt () { trap - DEBUG; PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0; }
+# use a function to avoid calling the DEBUG trap more than once
+PROMPT_COMMAND=prompt_command
+prompt_command () {
+  collapsed_wd
+  libash_hook_handler
+  undefC-cC-z
+}
+
+# use the prompt flag to avoid calling stty several times
+# in the DEBUG trap with compound commands
+undefC-cC-z () {
+  (( ! prompt_flag )) && command stty intr undef susp undef
+  prompt_flag=1
+}
+
+resetC-cC-z () {
+  (( prompt_flag )) && command stty "$saved_stty"
+  prompt_flag=0
+}
+
+bind '\C-z: "\C-cfg\C-m"' '\C-c: kill-whole-line'
+bind -m vi-command '\C-z: "\C-cifg\C-m"'
+bind -m vi-move '\C-z: "\C-cifg\C-m"'
+
+# save the last arg in  __ then restore it
+trap '__=$_; resetC-cC-z; : "$__"' DEBUG
 

@@ -29,7 +29,7 @@ if [[ ! ${!BASH_COMPLETION*} ]]; then
   unset BASH_COMPLETION_location{,s}
 fi
 
-shopt -s extglob globstar cdspell
+shopt -s extglob globstar cdspell lithist
 
 export LIBASHDIR=${LIBASHDIR=$BASH_SOURCE}
 

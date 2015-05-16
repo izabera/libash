@@ -1,2 +1,2 @@
 #!/bin/bash
-: "${HISTCONTROL=ignoredups}"
+: "${HISTCONTROL=ignoredups}" "${HISTIGNORE=fg:ls}"
