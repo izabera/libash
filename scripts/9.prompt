@@ -151,5 +151,11 @@ bind -m vi-command '\C-z: "\C-cifg\C-m"'
 bind -m vi-move '\C-z: "\C-cifg\C-m"'
 
 # save the last arg in  __ then restore it
-trap '__=$_; resetC-cC-z; : "$__"' DEBUG
+trap '__=$_; debug_trap "$BASH_COMMAND"; : "$__"' DEBUG
+
+debug_trap () {
+  # cat files with < like in zsh
+  [[ $1 = " <"* ]] && eval cat "$1"
+  resetC-cC-z
+}
 
