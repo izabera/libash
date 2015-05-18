@@ -300,3 +300,7 @@ dircleanup () {
   done
 }
 
+# minimal zsh-like vared
+vared () {
+  read -ei "${!1}" "$1"
+}
