@@ -62,7 +62,7 @@ _vim () {
             # just assume that log files are ok to open
             # even if they end in something like .weechatlog
             # and contain control characters (irc colors)
-            arr=( "$path"*.@($whitelist) "$path"*log )
+            local arr=( "$path"*.@($whitelist) "$path"*log )
             (( ${#arr[@]} )) && printf '%s\0: text\n' "${arr[@]}"
 
             # try to find scripts
