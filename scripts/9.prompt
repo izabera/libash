@@ -137,12 +137,12 @@ prompt_command () {
 # use the prompt flag to avoid calling stty several times
 # in the DEBUG trap with compound commands
 undefC-cC-z () {
-  (( ! prompt_flag )) && command stty intr undef susp undef
+  (( ! prompt_flag )) && command stty intr undef susp undef < /dev/tty
   prompt_flag=1
 }
 
 resetC-cC-z () {
-  (( prompt_flag )) && command stty "$saved_stty"
+  (( prompt_flag )) && command stty "$saved_stty" < /dev/tty
   prompt_flag=0
 }
 
