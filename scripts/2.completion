@@ -75,10 +75,10 @@ _vim () {
                 printf '%s\0: text\n' "${arr[file]}"
                 unset "arr[file]"
               fi
-            done
+            done 2>/dev/null
 
             # then use file --mime-type on what's left
-            file --mime-type -0 -L -r -- /dev/null "${arr[@]}"
+            file --mime-type -0 -L -r -- /dev/null "${arr[@]}" 2>/dev/null
             # and then >>>let's<<< add this random line with a single quote because of a bug in procsub fixed in 4.3
             )
 
@@ -201,3 +201,7 @@ _toybox () {
   fi
 }
 complete -F _toybox toybox
+
+
+# enhanced shopt to accept shell options
+complete -A shopt -A setopt shopt

@@ -5,7 +5,7 @@ pushd () {
 }
 
 shopt () {
-  local args=("$@") opt OPTIND options shopts returncode=0 returncode2
+  local args=("$@") opt OPTIND options shopts returncode=0
   while getopts : opt; do :; done
   shift "$((OPTIND - 1))"
   for opt; do
@@ -19,18 +19,15 @@ shopt () {
       *) shopts+=("$opt")
     esac
   done
-  if (( ${#options[@]} )); then
-    builtin shopt -o "${args[@]:0:OPTIND-1}" "${options[@]}"
-    returncode=$?
-  fi
-  if (( ${#shopts[@]} )); then
-    builtin shopt "${args[@]:0:OPTIND-1}" "${shopts[@]}"
-    returncode2=$?
-    (( ! returncode )) && returncode=$returncode2
-  fi
   if ! (( ${#options[@]} + ${#shopts[@]} )); then
-    builtin shopt "${args[@]}"
-    returncode=$?
+    builtin shopt "${args[@]}" || returncode=1
+  else
+    if (( ${#options[@]} )); then
+      builtin shopt -o "${args[@]:0:OPTIND-1}" "${options[@]}" || returncode=1
+    fi
+    if (( ${#shopts[@]} )); then
+      builtin shopt "${args[@]:0:OPTIND-1}" "${shopts[@]}" || returncode=1
+    fi
   fi
   return "$returncode"
 }
