@@ -57,12 +57,9 @@ alias ...='cd ../..'
 alias ....='cd ../../..'
 
 
-##########################
-# package managers
-##########################
-
 # package managers often need to run with sudo for anything useful
-pkgmgr=(aptitude apt-get dpkg   #debian
+pkgmgr=(
+        aptitude apt-get dpkg   #debian
         yum                     #fedora
         emerge                  #gentoo
         tgz                     #slackware

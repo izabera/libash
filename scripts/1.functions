@@ -304,3 +304,20 @@ dircleanup () {
 vared () {
   read -ei "${!1}" "$1"
 }
+
+# returns 1 if $1 and $2 are anagrams
+anagram () {
+  local -i i len1=${#1} len2=${#2}
+  (( len1 == len2 )) || return 1
+  local -A letters
+  for (( i = 0; i < len1; i++ )) do
+    (( letters['${1:i:1}'] += 1 ))
+  done
+  for (( i = 0; i < len2; i++ )) do
+    (( ( letters['${2:i:1}'] -= 1 ) >= 0 )) || return 1
+  done
+  for i in "${letters[@]}"; do
+    (( ! i )) || return 1
+  done
+}
+

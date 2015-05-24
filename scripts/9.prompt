@@ -112,7 +112,8 @@ collapsed_wd () {
 
 #PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]\w\[$_no_color\] \[$(return_status)\]\$\[$_no_color\] '
 
-simpleprompt () { trap - DEBUG; PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0; }
+# if simpleprompt is a function it can't reset the DEBUG trap in the caller
+alias simpleprompt="trap - DEBUG; PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0"
 
 # got the array idea from greycat
 PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]$shortcwd\[$_no_color\] \[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
