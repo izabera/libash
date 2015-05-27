@@ -34,19 +34,38 @@ libash_compgen () {
 
 # avoid opening binary files / pictures with vim
 _vim () {
-  local type path tilde="~" ng REPLY
+  local type path tilde="~" ng REPLY IFS=$' \t\n'
+
+  # ctags
+  if [[ $3 = -t ]]; then
+    local pwd=$PWD
+    # find it upwards
+    while [[ $pwd ]]; do
+      if [[ $pwd/tags ]]; then
+        mapfile -t COMPREPLY < <(awk -F'\t' -v pat="$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' "$pwd"/tags)
+        return
+      fi
+      pwd=${pwd%/*}
+    done
+    # not found? ok maybe generate it?
+    if type -P ctags &> /dev/null; then
+      ctags -R . &&
+        mapfile -t COMPREPLY < <(awk -F'\t' -v pat="$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' tags)
+    fi
+    return
+  fi
+
   case $2 in
-    '~') path=$HOME;;
+    '~') path=$HOME/ ; set "$1" "~/" "$3" ;;
     '~/'*) path=${2/$tilde/$HOME};;
     *) path=$2;;
   esac
-  [[ -d $path && $path != @(.|..) ]] && path=${path%/}/
   # read filename
   while read -r -d ''; do
     # mime type (remove : and leading whitespace)
     read -r _ type;
     if [[ $type = @(text*|inode/x-empty*) ]]; then
-      [[ $REPLY = "$HOME"/* && $2 = '~'* ]] && REPLY=${REPLY/"$HOME"/$tilde}
+      [[ $REPLY = "$HOME"/* && $2 = '~/'* ]] && REPLY=${REPLY/"$HOME"/$tilde}
       COMPREPLY+=("$REPLY")
     fi
   done < <(
@@ -86,7 +105,7 @@ _vim () {
   # when you're trying to complete ~ without / it doesn't show the directories
 
   # workaround, not perfect
-  if [[ $2 = '~' ]]; then
+  if [[ $2 = '~/' ]]; then
     shopt -q nullglob; ng=$?; shopt -s nullglob
     local dirs=(~/*/)
     (( ng )) && shopt -u nullglob
@@ -95,12 +114,61 @@ _vim () {
   fi
 }
 
-complete -o plusdirs -F _vim vim
+complete -o plusdirs -o bashdefault -F _vim vim
 
 # use this in case file fails detect a file as text
 # or in huge directories with thousands of files
 alias __vim=vim
 # probably never needed, it's quite fast now
+
+
+_ag () {
+  # there is this:
+  # https://github.com/ggreer/the_silver_searcher/blob/master/ag.bashcomp.sh
+  # but i don't really like it so yeah
+  local longopts=(--ackmate --ackmate-dir-filter --affinity --after --all-text --all-types
+  --before --break --case-sensitive --color --color-line-number --color-match --color-path
+  --color-win-ansi --column --context --count --debug --depth --file-search-regex --filename
+  --files-with-matches --files-without-matches --fixed-strings --follow --group --heading
+  --help --hidden --ignore --ignore-case --ignore-dir --invert-match --line-numbers
+  --list-file-types --literal --match --max-count --no-numbers --no-recurse --noaffinity
+  --nobreak --nocolor --nofilename --nofollow --nogroup --noheading --nonumbers --nopager
+  --norecurse --null --numbers --one-device --only-matching --pager --parallel --passthrough
+  --passthru --path-to-agignore --print-long-lines --print0 --recurse --search-binary
+  --search-files --search-zip --silent --skip-vcs-ignores --smart-case --stats --unrestricted
+  --version --vimgrep --word-regexp --workers)
+  local shtopt=(-a -A -B -C -D -f -F -g -G -h -i -l -L -m -n -p -Q -r -R -s -S -t -u -U -v -V -w -z)
+  local i
+
+  if [[ $2 = -* ]]; then
+    for i in "${longopts[@]}" "${shtopts[@]}"; do
+      [[ $i = "$2"* ]] && COMPREPLY+=("$i")
+    done
+    return
+  fi
+
+  case $3 in
+    --pager) mapfile -t COMPREPLY < <( compgen -c -- "$2") ; return ;;
+    --ignore@(|-dir)) compopt -o plusdirs; return ;;
+  esac
+
+  # if there's a tags file, use it
+  local pwd=$PWD
+  while [[ $pwd ]]; do
+    if [[ -r $pwd/tags ]]; then
+      mapfile -t COMPREPLY < <(awk -F'\t' -v pat="$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' "$pwd"/tags)
+      return
+    fi
+    pwd=${pwd%/*}
+  done
+
+  if type -P ctags &> /dev/null; then
+    ctags -R . &&
+      mapfile -t COMPREPLY < <(awk -F'\t' -v pat="$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' tags)
+  fi
+}
+
+complete -o bashdefault -F _ag ag
 
 
 # only complete shell scripts and options
@@ -169,7 +237,7 @@ _shellcheck () {
   (( ng )) && shopt -u nullglob
 }
 
-complete -F _shellcheck shellcheck
+complete -o bashdefault -F _shellcheck shellcheck -o bashdefault
 
 
 _busybox () {
@@ -180,12 +248,11 @@ _busybox () {
       [[ $REPLY = "$2"* ]] && COMPREPLY+=("$REPLY")
     done < /tmp/libash/busybox
   else
-    compopt -o bashdefault
     compopt -o default
     compopt -o filenames
   fi
 }
-complete -F _busybox busybox
+complete -o bashdefault -F _busybox busybox
 
 _toybox () {
   type -P toybox > /dev/null || return
@@ -195,13 +262,12 @@ _toybox () {
       [[ $REPLY = "$2"* ]] && COMPREPLY+=("$REPLY")
     done < /tmp/libash/toybox
   else
-    compopt -o bashdefault
     compopt -o default
     compopt -o filenames
   fi
 }
-complete -F _toybox toybox
+complete -o bashdefault -F _toybox toybox
 
 
 # enhanced shopt to accept shell options
-complete -A shopt -A setopt shopt
+complete -o bashdefault -A shopt -A setopt shopt

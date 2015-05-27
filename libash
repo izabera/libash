@@ -11,7 +11,9 @@ PROMPT_COMMAND=
 
 
 # case insensitive matching and completion
-# LIBASH_CASE=no
+if [[ ! -v LIBASH_CASE ]]; then
+  [[ $(bind -v) = *"ignore-case on"* ]] && LIBASH_CASE=no || LIBASH_CASE=yes
+fi
 
 # don't source it again
 if [[ ! ${!BASH_COMPLETION*} ]]; then
@@ -29,14 +31,14 @@ if [[ ! ${!BASH_COMPLETION*} ]]; then
   unset BASH_COMPLETION_location{,s}
 fi
 
-shopt -s extglob globstar cdspell lithist
+shopt -s extglob globstar cdspell lithist no_empty_cmd_completion checkwinsize
 
 export LIBASHDIR=${LIBASHDIR=$BASH_SOURCE}
 
 sourcelibash () {
   local file array i # i can be used in the sourced files (so far, only 2.prompt)
   # keep. the. order.
-  LC_COLLATE=C eval 'array=("$LIBASHDIR/scripts/"!(*alias|*notready*))'
+  LC_COLLATE=C eval 'array=("$LIBASHDIR/scripts/"!(*alias|*notready*|tags))'
   for file in "${array[@]}"; do
     source "$file"
   done

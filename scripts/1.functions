@@ -144,10 +144,10 @@ abspath () {
       # add an extra / to be removed later on, to help with paths like /path/to/file/..
       path=$1/
       while [[ $path = */@(|.|..)/* ]] ; do
-        path=${path//\/.\//\/}              # /foo/./bar/      -> /foo/bar/
-        path=${path//\/\//\/}               # /foo//bar/       -> /foo/bar/
-        path=${path/#\/..\//\/}             # /../foo/         -> /foo/
-        path=${path/\/+([!\/])\/..\//\/}    # /foo/bar/../baz/ -> /foo/baz/
+        path=${path//\/.\///}              # /foo/./bar/      -> /foo/bar/
+        path=${path//\/\///}               # /foo//bar/       -> /foo/bar/
+        path=${path/#\/..\///}             # /../foo/         -> /foo/
+        path=${path/\/+([!\/])\/..\///}    # /foo/bar/../baz/ -> /foo/baz/
       done
       [[ $path = / ]] || path=${path%/}
     fi
@@ -307,7 +307,7 @@ vared () {
 
 # returns 1 if $1 and $2 are anagrams
 anagram () {
-  local -i i len1=${#1} len2=${#2}
+  local i len1=${#1} len2=${#2}
   (( len1 == len2 )) || return 1
   local -A letters
   for (( i = 0; i < len1; i++ )) do
