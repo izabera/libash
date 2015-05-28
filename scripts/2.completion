@@ -42,7 +42,7 @@ _vim () {
     # find it upwards
     while [[ $pwd ]]; do
       if [[ $pwd/tags ]]; then
-        mapfile -t COMPREPLY < <(awk -F'\t' -v pat="$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' "$pwd"/tags)
+        mapfile -t COMPREPLY < <(awk -F'\t' -v pat="^$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' "$pwd"/tags)
         return
       fi
       pwd=${pwd%/*}
@@ -50,7 +50,7 @@ _vim () {
     # not found? ok maybe generate it?
     if type -P ctags &> /dev/null; then
       ctags -R . &&
-        mapfile -t COMPREPLY < <(awk -F'\t' -v pat="$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' tags)
+        mapfile -t COMPREPLY < <(awk -F'\t' -v pat="^$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' tags)
     fi
     return
   fi
@@ -156,7 +156,7 @@ _ag () {
   local pwd=$PWD
   while [[ $pwd ]]; do
     if [[ -r $pwd/tags ]]; then
-      mapfile -t COMPREPLY < <(awk -F'\t' -v pat="$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' "$pwd"/tags)
+      mapfile -t COMPREPLY < <(awk -F'\t' -v pat="^$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' "$pwd"/tags)
       return
     fi
     pwd=${pwd%/*}
@@ -164,7 +164,7 @@ _ag () {
 
   if type -P ctags &> /dev/null; then
     ctags -R . &&
-      mapfile -t COMPREPLY < <(awk -F'\t' -v pat="$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' tags)
+      mapfile -t COMPREPLY < <(awk -F'\t' -v pat="^$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' tags)
   fi
 }
 
