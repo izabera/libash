@@ -41,7 +41,7 @@ _vim () {
     local pwd=$PWD
     # find it upwards
     while [[ $pwd ]]; do
-      if [[ $pwd/tags ]]; then
+      if [[ -r $pwd/tags ]]; then
         mapfile -t COMPREPLY < <(awk -F'\t' -v pat="^$2" '$1 ~ pat && $1 !~ /^!/ { print $1 }' "$pwd"/tags)
         return
       fi
@@ -55,6 +55,7 @@ _vim () {
     return
   fi
 
+  compopt -o plusdirs
   case $2 in
     '~') path=$HOME/ ; set "$1" "~/" "$3" ;;
     '~/'*) path=${2/$tilde/$HOME};;
@@ -114,7 +115,7 @@ _vim () {
   fi
 }
 
-complete -o plusdirs -o bashdefault -F _vim vim
+complete -o bashdefault -F _vim vim
 
 # use this in case file fails detect a file as text
 # or in huge directories with thousands of files
