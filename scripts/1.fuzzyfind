@@ -1,80 +1,144 @@
 #!/bin/bash
 
-return
 explodeglob () {
-  # a support function that splits a strings in the 'exploded' array
+  # a support function that splits a strings in the 'exploded' array in the caller scope
   exploded=()
-  for (( i = 0; i < ${#2}; i++ )); do  # glob here
-    if [[ ${2:i:1} = '\' ]]; then
+  local current i inglob
+  for (( i = 0; i < ${#1}; i++ )); do  # glob here
+    if [[ ${1:i:1} = '\' ]]; then
       if (( escaped )); then
-        fuzzy+="*\\"
+        current+='\\'  # how to handle two backslashes here?
         escaped=0
       else
         escaped=1
+        continue
       fi
-    elif [[ ${2:i:1} = ['[*?]'] ]]; then # weirdly quoted because of vim's broken syntax hl -_-
-      if (( escaped )); then
-        fuzzy+="*\\"
+    elif [[ ${1:i:1} = '[' ]]; then
+      if (( inglob )); then
+        current+='['
+      elif (( escaped )); then
+        current+='\['
       else
-        escaped=1
+        current+='[' inglob=1
       fi
+      escaped=0
+
+    elif [[ ${1:i:1} = ']' ]]; then
+      if (( escaped )); then
+        current+='\]'
+      elif (( inglob )); then
+        current+=']' inglob=0
+      else
+        current+=']'
+      fi
+      escaped=0
+
+    elif [[ ${1:i:1} = ['*?'] ]]; then
+      if (( escaped )); then
+        current+=\\${1:i:1}
+      else
+        current+=${1:i:1}
+      fi
+      escaped=0
+
+    else
+      escaped=0 current+=${1:i:1}
     fi
-    #inglob=1 fuzzy+="${2:i:1}"
-    #elif [[ ${2:i:1} = \\ ]]; then
-    #fuzzy+="*${2:i:2}"
-    #((i++))
-    #else
-    #fuzzy+="*${2:i:1}"
-    #fi
+
+    if (( ! inglob )); then
+      exploded+=("$current")
+      current=
+    fi
+
   done
 }
 
 find () {
-  local fuzzy i args newargs opts optcount option inbrkt
-  # add moar if needed
-  args=(name     iname     path   ipath     user   nouser  group   nogroup
-        perm     prune     size   xdev      links  atime   ctime   mtime
-        newer    mindepth  depth  maxdepth  type   print   print0  exec
-        execdir  ok        okdir)
+  local fuzzy newargs option=0 opt exec_arg exploded
   # number of options for the arguments
-  # if the no. is -1, read until a terminator is found
-  opts=(1        1         1      1         1      0       1       0
-        1        0         1      0         1      1       1       1
-        1        1         0      1         1      0       0       -1
-        -1       0         0)
-  args=([name]=1 [iname]=1 [path]=1 [ipath]=1 [user]=1 [nouser]=0 [group]=1 [nogroup]=0
-        [perm]=1 [prune]=0 [size]=1 [xdev]=0 [links]=1 [atime]=1 [ctime]=1 [mtime]=1
-        [newer]=1 [mindepth]=1 [depth]=0 [maxdepth]=1 [type]=1 [print]=0 [print0]=0
-        [exec]="-1,{} +,;" [execdir]="-1,{} +,;" [ok]=0 [okdir]=0)   # i can't think of a way that doesn't suck
+  # add moar if needed
+
+  # these are from gnu find 4.4.2
+
+  declare -A args=(
+        [d]=0         [daystart]=0   [depth]=0                  [follow]=0
+        [help]=0      [-help]=0      [ignore_readdir_race]=0    [maxdepth]=1
+        [mindepth]=1  [mount]=0      [no_ignore_readdir_race]=0 [noleaf]=0
+        [regextype]=1 [version]=0    [-version]=0               [warn]=0
+        [nowarn]=0    [xdev]=0       [amin]=1                   [anewer]=1
+        [atime]=1     [cmin]=1       [cnewer]=1                 [ctime]=1    
+        [empty]=0     [executable]=0 [false]=0                  [fstype]=1
+        [gid]=1       [group]=1      [ilname]=1                 [iname]=1
+        [inum]=1      [ipath]=1      [iregex]=1                 [iwholename]=1
+        [links]=1     [lname]=1      [mmin]=1                   [mtime]=1
+        [name]=1      [newer]=1      [newerXY]=1                [nogroup]=0
+        [nouser]=0    [path]=1       [perm]=1                   [readable]=0
+        [regex]=1     [samefile]=1   [size]=1                   [true]=0
+        [uid]=1       [used]=1       [user]=1                   [wholename]=1
+        [writable]=0  [xtype]=1      [delete]=0                 [exec]=2
+        [execdir]=2   [fls]=1        [fprint]=1                 [fprint0]=1
+        [fprintf]=1   [ls]=0         [ok]=2                     [okdir]=2
+        [print]=0     [print0]=0     [printf]=1                 [prune]=0
+        [quit]=0      ["("]=0        [")"]=0                    [!]=0
+        [not]=0       [a]=0          [and]=0                    [o]=0
+        [or]=0        [,]=0          [H]=0                      [L]=0
+        [P]=0         [amin]=1       [anewer]=1                 [atime]=1
+        [amin]=1      [anewer]=1     [atime]=1    
+        )
+
   while (($#)); do
     # if option is 0, we're not in the options of an argument
     # if it's 1, we're in regular options
+    # if it's 2, we're in -exec or -execdir
     if [[ $option = 0 ]]; then
-      if [[$1 = -* ]]; then
-        if [[ -v args['${1#-}'] ]]; then
-          newargs+=("$1")
-          optcount=0
-          option=${args[$1]}
-        elif [[ $1 = -?(i)fuzzy ]]; then
+      if [[ $1 = -* ]]; then
+
+        if [[ $1 = -?(i)fuzzy ]]; then
           if (( $# > 1 )); then
             explodeglob "$2"
-            IFS=* eval 'fuzzy="${exploded[@]}"'
-            newargs+=("${1%fuzzy}name" "$fuzzy*")
+            IFS=* eval 'fuzzy="${exploded[*]}"'
+            newargs+=("${1%fuzzy}name" "*$fuzzy*")
             shift
           else
             echo "find: missing argument to \`$1'"
             return 1
           fi
+
+        elif [[ $1 = -exec@(|dir) ]]; then
+          newargs+=("$1")
+          option=2
+
+        elif [[ -v args['${1#-}'] ]]; then
+          newargs+=("$1")
+          option=${args[${1#-}]}
+          [[ $option = 2 ]] && opt=$1
+
+        else # just add any unknown option
+          newargs+=("$1")
         fi
-      else
+
+      else # not an option? just add it
         newargs+=("$1")
       fi # $1 = -*
-    elif [[ $option != -1 ]]; then # option isn't 0 or 1
+
+    elif [[ $option = 1 ]]; then
       newargs+=("$1")
-      (( optcount ++ ))
-      if (( optcount == option ))
+      option=0
+
+    else # args for exec and ok
+
+      if [[ $1 = ';' ]]; then
+        option=0
+      elif [[ $1 = {} ]]; then
+        exec_arg=1
+      elif [[ $1 = + && $opt = exec* && $exec_arg = 1 ]]; then
+        option=0
+      else
+        exec_arg=0
       fi
+      newargs+=("$1")
     fi
+
     shift
   done
   command find "${newargs[@]}"
