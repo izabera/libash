@@ -236,7 +236,8 @@ _shellcheck () {
 
     # check the shebang line
     read -rn 64 < "$file"
-    [[ $REPLY = "#!"*([[:blank:]])@(*/bin/|/usr/bin/env+([[:blank:]]))?(?(b|d)a|?(m)k|z)sh* ]] && COMPREPLY+=("$file")
+    [[ $REPLY = "#!"*([[:blank:]])@(*/bin/|/usr/bin/env+([[:blank:]]))?(?(b|d)a|?(m)k|z)sh* ]] &&
+      COMPREPLY+=("${file/"$HOME"/$tilde}")
   done
 
   if [[ $2 = '~' ]]; then
@@ -247,7 +248,7 @@ _shellcheck () {
   (( ng )) && shopt -u nullglob
 }
 
-complete -o bashdefault -F _shellcheck shellcheck -o bashdefault
+complete -o bashdefault -F _shellcheck shellcheck
 
 
 _busybox () {
