@@ -132,7 +132,7 @@ PROMPT_COMMAND=prompt_command
 prompt_command () {
   collapsed_wd
   libash_hook_handler
-  undefC-cC-z
+  #undefC-cC-z
 }
 
 # use the prompt flag to avoid calling stty several times
@@ -147,16 +147,16 @@ resetC-cC-z () {
   prompt_flag=0
 }
 
-bind '\C-z: "\C-cfg\C-m"' '\C-c: kill-whole-line'
-bind -m vi-command '\C-z: "\C-cifg\C-m"'
-bind -m vi-move '\C-z: "\C-cifg\C-m"'
+#bind '\C-z: "\C-cfg\C-m"' '\C-c: kill-whole-line'
+#bind -m vi-command '\C-z: "\C-cifg\C-m"'
+#bind -m vi-move '\C-z: "\C-cifg\C-m"'
 
 # save the last arg in  __ then restore it
-trap '__=$_; debug_trap "$BASH_COMMAND"; : "$__"' DEBUG
+#trap '__=$_; debug_trap "$BASH_COMMAND"; : "$__"' DEBUG
 
 debug_trap () {
   # cat files with < like in zsh
   [[ $1 = " <"* ]] && eval cat "$1"
-  resetC-cC-z
+  #resetC-cC-z
 }
 
