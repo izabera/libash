@@ -5,49 +5,45 @@ explodeglob () {
   exploded=()
   local current i inglob
   for (( i = 0; i < ${#1}; i++ )); do  # glob here
-    if [[ ${1:i:1} = '\' ]]; then
-      if (( escaped )); then
-        current+='\\'  # how to handle two backslashes here?
-        escaped=0
-      else
-        escaped=1
-        continue
-      fi
-    elif [[ ${1:i:1} = '[' ]]; then
-      if (( inglob )); then
-        current+='['
-      elif (( escaped )); then
-        current+='\['
-      else
-        current+='[' inglob=1
-      fi
-      escaped=0
+    case ${1:i:1} in
+       \\) if (( escaped )); then
+             current+='\\'  # how to handle two backslashes here?
+             escaped=0
+           else
+             escaped=1
+             continue
+           fi ;;
 
-    elif [[ ${1:i:1} = ']' ]]; then
-      if (( escaped )); then
-        current+='\]'
-      elif (( inglob )); then
-        current+=']' inglob=0
-      else
-        current+=']'
-      fi
-      escaped=0
+        [) if (( inglob )); then
+             current+='['
+           elif (( escaped )); then
+             current+='\['
+           else
+             current+='[' inglob=1
+           fi
+           escaped=0 ;;
 
-    elif [[ ${1:i:1} = ['*?'] ]]; then
-      if (( escaped )); then
-        current+=\\${1:i:1}
-      else
-        current+=${1:i:1}
-      fi
-      escaped=0
+        ]) if (( escaped )); then
+             current+='\]'
+           elif (( inglob )); then
+             current+=']' inglob=0
+           else
+             current+=']'
+           fi
+           escaped=0 ;;
 
-    else
-      escaped=0 current+=${1:i:1}
-    fi
+    \*|\?) if (( escaped )); then
+             current+=\\${1:i:1}
+           else
+             current+=${1:i:1}
+           fi
+           escaped=0 ;;
+
+        *) escaped=0 current+=${1:i:1}
+    esac
 
     if (( ! inglob )); then
-      exploded+=("$current")
-      current=
+      exploded+=("$current") current=
     fi
 
   done
