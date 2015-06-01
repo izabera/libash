@@ -3,35 +3,42 @@
 # saving colors to avoid having to use tput again
 if [[ -r /tmp/libash/colors ]]; then
   . /tmp/libash/colors
-  #declare -gr _black=$_black _red=$_red _green=$_green _yellow=$_yellow _blue=$_blue _magenta=$_magenta _cyan=$_cyan _white=$_white _no_color=$_no_color _colors=("${_colors[@]}")
 else
-  _black=$(tput setaf 0)
-  _red=$(tput setaf 1)
-  _green=$(tput setaf 2)
-  _yellow=$(tput setaf 3)
-  _blue=$(tput setaf 4)
-  _magenta=$(tput setaf 5)
-  _cyan=$(tput setaf 6)
-  _white=$(tput setaf 7)
+  _black=$(tput setaf 0)    _bright_black=$(tput setaf 8)
+  _red=$(tput setaf 1)      _bright_red=$(tput setaf 9)
+  _green=$(tput setaf 2)    _bright_green=$(tput setaf 10)
+  _yellow=$(tput setaf 3)   _bright_yellow=$(tput setaf 11)
+  _blue=$(tput setaf 4)     _bright_blue=$(tput setaf 12)
+  _magenta=$(tput setaf 5)  _bright_magenta=$(tput setaf 13)
+  _cyan=$(tput setaf 6)     _bright_cyan=$(tput setaf 14)
+  _white=$(tput setaf 7)    _bright_white=$(tput setaf 15)
   _no_color=$(tput sgr 0)
-  _colors=("$_black" "$_red" "$_green" "$_yellow" "$_blue" "$_magenta" "$_cyan" "$_white" "$_no_color")
+  _colors=("$_black"        "$_red"            "$_green"        "$_yellow"
+           "$_blue"         "$_magenta"        "$_cyan"         "$_white"
+           "$_bright_black" "$_bright_red"     "$_bright_green" "$_bright_yellow"
+           "$_bright_blue"  "$_bright_magenta" "$_bright_cyan"  "$_bright_white" "$_no_color")
   {
-    printf '%s=%q\n' _black    "$_black"    \
-                     _red      "$_red"      \
-                     _green    "$_green"    \
-                     _yellow   "$_yellow"   \
-                     _blue     "$_blue"     \
-                     _magenta  "$_magenta"  \
-                     _cyan     "$_cyan"     \
-                     _white    "$_white"    \
+    printf '%s=%q\n' _black           "$_black"           \
+                     _red             "$_red"             \
+                     _green           "$_green"           \
+                     _yellow          "$_yellow"          \
+                     _blue            "$_blue"            \
+                     _magenta         "$_magenta"         \
+                     _cyan            "$_cyan"            \
+                     _white           "$_white"           \
+                     _bright_black    "$_bright_black"    \
+                     _bright_red      "$_bright_red"      \
+                     _bright_green    "$_bright_green"    \
+                     _bright_yellow   "$_bright_yellow"   \
+                     _bright_blue     "$_bright_blue"     \
+                     _bright_magenta  "$_bright_magenta"  \
+                     _bright_cyan     "$_bright_cyan"     \
+                     _bright_white    "$_bright_white"    \
                      _no_color "$_no_color"
     for i in "${!_colors[@]}"; do
       printf '_colors[%s]=%q\n' "$i" "${_colors[i]}"
     done
   } > /tmp/libash/colors
-  # declare -p doesn't show the -g attribute
-  #declare -p _black _red _green _yellow _blue _magenta _cyan _white _no_color _colors > /tmp/libash/colors
-  #declare -gr _black=$_black _red=$_red _green=$_green _yellow=$_yellow _blue=$_blue _magenta=$_magenta _cyan=$_cyan _white=$_white _no_color=$_no_color _colors=("${_colors[@]}")
 fi
 
 return_value () {
@@ -62,8 +69,8 @@ simple_collapsed_wd () {
 # handles collisions correctly!
 collapsed_wd () {
   local cwd tilde i j pathsofar ambiguous ng dg
-  shopt -q nullglob; ng=$?; shopt -s nullglob
-  shopt -q dotglob; dg=$?; shopt -s dotglob
+  command shopt -q nullglob; ng=$?; command shopt -s nullglob
+  command shopt -q dotglob; dg=$?; command shopt -s dotglob
   cwd=$PWD/ tilde="~" # bash didn't perform quote removal in the replacement until 4.3
   IFS=/ read -ra cwd <<< "${cwd/#"$HOME"\//$tilde/}"
   if [[ $cwd ]]; then
@@ -83,8 +90,8 @@ collapsed_wd () {
   done
   [[ $shortcwd = */?* ]] && shortcwd=${shortcwd%/*}/${cwd[@]: -1}
 
-  (( ng )) && shopt -u nullglob
-  (( dg )) && shopt -u dotglob
+  (( ng )) && command shopt -u nullglob
+  (( dg )) && command shopt -u dotglob
 
   # now shorten it further with PROMPT_DIRTRIM
   IFS=/ read -ra cwd <<< "$shortcwd"
@@ -110,13 +117,11 @@ collapsed_wd () {
   fi
 }
 
-#PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]\w\[$_no_color\] \[$(return_status)\]\$\[$_no_color\] '
-
 # if simpleprompt is a function it can't reset the DEBUG trap in the caller
 alias simpleprompt="trap - DEBUG; PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0"
 
 # got the array idea from greycat
-PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]$shortcwd\[$_no_color\] \[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
+PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]${shortcwd//\//$_bright_red/$_red}\[$_no_color\] \[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
 
 saved_stty=$(command stty -g)
 stty () {
