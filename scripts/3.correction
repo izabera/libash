@@ -4,13 +4,14 @@
 command_not_found_handle() {
   [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
   declare -A {never,always}_correct
+  local args
+  printf -v args "%q " "${@:2}"
   if [[ -v 'never_correct[$1]' ]]; then
     printf "%s: command not found: %s\n" "$0" "$1"
     return 127
   fi
   if [[ -v 'always_correct[$1]' ]]; then
-    printf "%s %s\n" "${always_correct[$1]}" "${*:2}"
-    "${always_correct[$1]}" "${@:2}"
+    eval "${always_correct[$1]} $args"
     # vvvvvv     buggy bash stops the command if you comment this line away
     return
     # ^^^^^^     buggy bash stops the command if you comment this line away
@@ -25,18 +26,16 @@ command_not_found_handle() {
       while [[ $answer != [nya] ]]; do
         read -rsn1 answer
       done
+      echo "$answer"
       case $answer in
         a) always_correct[$1]=$cmd
            declare -p {never,always}_correct > ~/.config/libash/corrections 2>/dev/null
-           # set -v would be better, printing it like this is better than nothing
-           printf "\n%s %s\n" "${always_correct[$1]}" "${*:2}"
-           "${always_correct[$1]}" "${@:2}" ;;
+           eval "${always_correct[$1]}" "$args" ;;
         n) never_correct[$1]=$cmd
-           printf "\n%s: command not found: %s\n" "$0" "$1"
+           printf "%s: command not found: %s\n" "$0" "$1"
            declare -p {never,always}_correct > ~/.config/libash/corrections 2>/dev/null
            return 127 ;;
-        y) printf "\n%s %s\n" "$cmd" "${*:2}"
-           "$cmd" "${@:2}"
+        y) eval "$cmd $args"
       esac
       return
     fi
