@@ -352,7 +352,10 @@ numglob () {
   if (( ! silent )); then echo "$REPLY"; fi
 }
 
+# true if it read at least one byte to read
+# useful for programs like find that use a stupid exit code
+output? () { LC_ALL=C read -rn1 -d '' && printf %b "${REPLY:-\0}" && cat; }
+
 # find swap files for vim
-vimfind() { find "${1-$HOME}" -type f -name ".*" -name "*${2-*}*.sw?"; }
-#                                          hidden       contains $2
-# can't combine it in .*$2*.swp because it excludes .swp (files with no name)
+vimfind() { find "${1-$HOME}" -type f -name "*${2-*}*.sw?" 2>/dev/null | output?; }
+# vim can create files that don't start with . if directory is set
