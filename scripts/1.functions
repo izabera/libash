@@ -352,3 +352,7 @@ numglob () {
   if (( ! silent )); then echo "$REPLY"; fi
 }
 
+# find swap files for vim
+vimfind() { find "${1-$HOME}" -type f -name ".*" -name "*${2-*}*.sw?"; }
+#                                          hidden       contains $2
+# can't combine it in .*$2*.swp because it excludes .swp (files with no name)
