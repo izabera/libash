@@ -55,4 +55,8 @@ sourcelibash
 TIMEFORMAT=$'\nreal: %lR, user: %lU, sys: %lS'
 
 
-[[ -r ~/.config/libash ]] && source ~/.config/libash
+if [[ -r ~/.config/libash/libash ]]; then
+  source ~/.config/libash/libash
+else
+  mkdir -p ~/.config/libash && echo '# empty' > ~/.config/libash/libash
+fi

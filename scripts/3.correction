@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# zsh-like correction
+command_not_found_handle() {
+  [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
+  declare -A {never,always}_correct
+  if [[ -v 'never_correct[$1]' ]]; then
+    printf "%s: command not found: %s\n" "$0" "$1"
+    return 127
+  fi
+  if [[ -v 'always_correct[$1]' ]]; then
+    printf "%s %s\n" "${always_correct[$1]}" "${*:2}"
+    "${always_correct[$1]}" "${@:2}"
+    # vvvvvv     buggy bash stops the command if you comment this line away
+    return
+    # ^^^^^^     buggy bash stops the command if you comment this line away
+    # seems fixed in 4.4devel
+  fi
+  local cmd answer
+  mapfile -t cmd < <(compgen -c)
+  for cmd in "${cmd[@]}"; do
+    spdist "$1" "$cmd"
+    if (( $? < 3 )); then
+      printf "%s: correct '%s' to '%s' [nya]? " "$0" "$1" "$cmd"
+      while [[ $answer != [nya] ]]; do
+        read -rsn1 answer
+      done
+      case $answer in
+        a) always_correct[$1]=$cmd
+           declare -p {never,always}_correct > ~/.config/libash/corrections 2>/dev/null
+           # set -v would be better, printing it like this is better than nothing
+           printf "\n%s %s\n" "${always_correct[$1]}" "${*:2}"
+           "${always_correct[$1]}" "${@:2}" ;;
+        n) never_correct[$1]=$cmd
+           printf "\n%s: command not found: %s\n" "$0" "$1"
+           declare -p {never,always}_correct > ~/.config/libash/corrections 2>/dev/null
+           return 127 ;;
+        y) printf "\n%s %s\n" "$cmd" "${*:2}"
+           "$cmd" "${@:2}"
+      esac
+      return
+    fi
+  done
+  printf "%s: command not found: %s\n" "$0" "$1"
+  return 127
+}
+
+# spdist ported from c to bash
+# original: lib/sh/spell.c
+spdist() {
+  local cur=$1 new=$2 i
+  [[ $1 = "$2" ]] && return # exact match
+  while [[ ${1:i:1} = "${2:i:1}" ]]; do (( i++ )); done
+  cur=${1:i} new=${2:i}
+  if [[ $cur ]]; then
+    if [[ $new ]]; then
+       [[ ${cur:1} && ${new:1} && ${cur::1} = "${new:1:1}" &&
+          ${cur:1:1} = "${new::1}" && ${cur:2} = "${new:2}" ]] &&
+          return 1 # transposition
+    fi
+    [[ ${cur:1} = "$new" ]] && return 2 # extra character
+  fi
+  if [[ $new && ${new:1} = "$cur" ]]; then
+    return 2  # missing character
+  fi
+  return 3
+}
+
