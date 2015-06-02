@@ -321,3 +321,34 @@ anagram () {
   done
 }
 
+# usage:  numglob [-s] start end [increment]
+numglob () {
+  # stupidly produces an extglob that matches all the numbers in a range
+  # ranges can be zero padded
+  # returns it in REPLY
+  # if you don't use numglob -s, the result is also printed
+
+  # example:
+  # grep 'Access Denied' log-2015-04-$(numglob 07 23).log
+
+  # the output is rather long but there's no real reason to work harder
+  # to produce a shorter glob
+
+  local IFS='|' array silent=0
+
+  [[ $1 = -s ]] && shift && silent=1
+
+  case $# in
+    0|1) return 1 ;;
+    2) [[ $1 = ?(-)+([[:digit:]]) &&
+          $2 = ?(-)+([[:digit:]]) ]] || return
+       eval "array=({$1..$2})" ;;
+    *) [[ $1 = ?(-)+([[:digit:]]) &&
+          $2 = ?(-)+([[:digit:]]) &&
+          $3 = ?(-)+([[:digit:]]) ]] || return
+       eval "array=({$1..$2..$3})" ;;
+   esac
+  REPLY="@(${array[*]})"
+  if (( ! silent )); then echo "$REPLY"; fi
+}
+
