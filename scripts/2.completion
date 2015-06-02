@@ -282,3 +282,32 @@ complete -o bashdefault -F _toybox toybox
 
 # enhanced shopt to accept shell options
 complete -o bashdefault -A shopt -A setopt shopt
+
+
+_asciinema () {
+  local i ng
+  builtin shopt -q nullglob; ng=$?; builtin shopt -s nullglob
+  if (( COMP_CWORD == 1 )); then
+    for i in rec play upload auth --help --version; do
+      [[ $i = "$2"* ]] && COMPREPLY+=("$i")
+    done
+  else
+    case ${COMP_WORDS[1]} in
+      rec) if [[ $2 = -* ]]; then
+             for i in --command --title --max-wait --yes; do
+               [[ $i = "$2"* ]] && COMPREPLY+=("$i")
+             done
+           fi
+           if (( ! ${#COMPREPLY[@]} )); then
+             case $3 in
+               -c|--command) mapfile -t COMPREPLY < <(compgen -c -- "$2") ;;
+               -*) ;;
+               *) COMPREPLY=("$2"*) ;;
+             esac
+           fi ;;
+      upload|play) COMPREPLY=("$2"*) ;;
+    esac
+  fi
+  (( ng )) && builtin shopt -u nullglob
+}
+complete -o bashdefault -o filenames -F _asciinema asciinema

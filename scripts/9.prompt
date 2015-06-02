@@ -71,8 +71,8 @@ simple_collapsed_wd () {
 # handles collisions correctly!
 collapsed_wd () {
   local cwd tilde i j pathsofar ambiguous ng dg
-  command shopt -q nullglob; ng=$?; command shopt -s nullglob
-  command shopt -q dotglob; dg=$?; command shopt -s dotglob
+  builtin shopt -q nullglob; ng=$?; builtin shopt -s nullglob
+  builtin shopt -q dotglob; dg=$?; builtin shopt -s dotglob
   cwd=$PWD/ tilde="~" # bash didn't perform quote removal in the replacement until 4.3
   IFS=/ read -ra cwd <<< "${cwd/#"$HOME"\//$tilde/}"
   if [[ $cwd ]]; then
@@ -92,8 +92,8 @@ collapsed_wd () {
   done
   [[ $shortcwd = */?* ]] && shortcwd=${shortcwd%/*}/${cwd[@]: -1}
 
-  (( ng )) && command shopt -u nullglob
-  (( dg )) && command shopt -u dotglob
+  (( ng )) && builtin shopt -u nullglob
+  (( dg )) && builtin shopt -u dotglob
 
   # now shorten it further with PROMPT_DIRTRIM
   IFS=/ read -ra cwd <<< "$shortcwd"
