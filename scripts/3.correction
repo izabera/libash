@@ -3,12 +3,33 @@
 # zsh-like correction
 command_not_found_handle() {
   [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
-  declare -A {never,always}_correct
+  declare -A {never,always,maybe}_correct
   local args
   printf -v args "%q " "${@:2}"
   if [[ -v 'never_correct[$1]' ]]; then
     printf "%s: command not found: %s\n" "$0" "$1"
     return 127
+  fi
+  if [[ -v 'maybe_correct[$1]' ]]; then
+    # maybe an extra function?
+    printf "%s: correct '%s' to '%s' [nya]? " "$0" "$1" "$cmd"
+    while [[ $answer != [nya] ]]; do
+      read -rsn1 answer
+    done
+    echo "$answer"
+    case $answer in
+      a) always_correct[$1]=$cmd
+         unset 'maybe_correct[$1]'
+         declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
+         eval "${always_correct[$1]}" "$args" ;;
+      n) never_correct[$1]=$cmd
+         printf "%s: command not found: %s\n" "$0" "$1"
+         unset 'maybe_correct[$1]'
+         declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
+         return 127 ;;
+      y) eval "$cmd $args"
+    esac
+    return
   fi
   if [[ -v 'always_correct[$1]' ]]; then
     eval "${always_correct[$1]} $args"
@@ -29,13 +50,15 @@ command_not_found_handle() {
       echo "$answer"
       case $answer in
         a) always_correct[$1]=$cmd
-           declare -p {never,always}_correct > ~/.config/libash/corrections 2>/dev/null
+           declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
            eval "${always_correct[$1]}" "$args" ;;
         n) never_correct[$1]=$cmd
            printf "%s: command not found: %s\n" "$0" "$1"
-           declare -p {never,always}_correct > ~/.config/libash/corrections 2>/dev/null
+           declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
            return 127 ;;
-        y) eval "$cmd $args"
+        y) maybe_correct[$1]=$cmd
+           declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
+           eval "$cmd $args"
       esac
       return
     fi
@@ -56,6 +79,7 @@ spdist() {
        [[ ${cur:1} && ${new:1} && ${cur::1} = "${new:1:1}" &&
           ${cur:1:1} = "${new::1}" && ${cur:2} = "${new:2}" ]] &&
           return 1 # transposition
+       [[ ${cur:1} = "${new:1}" ]] && return 2 # one character mismatch
     fi
     [[ ${cur:1} = "$new" ]] && return 2 # extra character
   fi
