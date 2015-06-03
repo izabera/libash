@@ -10,65 +10,60 @@ command_not_found_handle() {
     printf "%s: command not found: %s\n" "$0" "$1"
     return 127
   fi
-  if [[ -v 'maybe_correct[$1]' ]]; then
-    # maybe an extra function?
-    printf "%s: correct '%s' to '%s' [nya]? " "$0" "$1" "$cmd"
-    while [[ $answer != [nya] ]]; do
-      read -rsn1 answer
-    done
-    echo "$answer"
-    case $answer in
-      a) always_correct[$1]=$cmd
-         unset 'maybe_correct[$1]'
-         declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
-         eval "${always_correct[$1]}" "$args" ;;
-      n) never_correct[$1]=$cmd
-         printf "%s: command not found: %s\n" "$0" "$1"
-         unset 'maybe_correct[$1]'
-         declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
-         return 127 ;;
-      y) eval "$cmd $args"
-    esac
-    return
-  fi
   if [[ -v 'always_correct[$1]' ]]; then
     eval "${always_correct[$1]} $args"
-    # vvvvvv     buggy bash stops the command if you comment this line away
     return
-    # ^^^^^^     buggy bash stops the command if you comment this line away
-    # seems fixed in 4.4devel
   fi
-  local cmd answer
+  if [[ -v 'maybe_correct[$1]' ]]; then
+    ask_correction "$1" "$cmd"
+    return
+  fi
+  local cmd
   mapfile -t cmd < <(compgen -c)
   for cmd in "${cmd[@]}"; do
     spdist "$1" "$cmd"
     if (( $? < 3 )); then
-      printf "%s: correct '%s' to '%s' [nya]? " "$0" "$1" "$cmd"
-      while [[ $answer != [nya] ]]; do
-        read -rsn1 answer
-      done
-      echo "$answer"
-      case $answer in
-        a) always_correct[$1]=$cmd
-           declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
-           eval "${always_correct[$1]}" "$args" ;;
-        n) never_correct[$1]=$cmd
-           printf "%s: command not found: %s\n" "$0" "$1"
-           declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
-           return 127 ;;
-        y) maybe_correct[$1]=$cmd
-           declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
-           eval "$cmd $args"
-      esac
+      ask_correction "$1" "$cmd"
       return
     fi
   done
-  printf "%s: command not found: %s\n" "$0" "$1"
-  return 127
+
+  # search for a command that starts with $1 but it's longer than ${#1} + 1 characters
+  mapfile -t cmd < <(compgen -c -- "$1")
+  if (( ${#cmd[@]} )); then
+    ask_correction "$1" "$cmd"
+  else
+    printf "%s: command not found: %s\n" "$0" "$1"
+    return 127
+  fi
+}
+
+ask_correction() {
+  local answer
+  printf "%s: correct '%s' to '%s' [nya]? " "$0" "$1" "$2"
+  while [[ $answer != [nNyYaA] ]]; do
+    read -rsn1 answer
+  done
+  echo "$answer"
+  case $answer in
+    A|a) always_correct[$1]=$2
+         unset 'maybe_correct[$1]'
+         declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
+         eval "${always_correct[$1]}" "$args" ;;
+    N|n) never_correct[$1]=$2
+         printf "%s: command not found: %s\n" "$0" "$1"
+         unset 'maybe_correct[$1]'
+         declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
+         return 127 ;;
+    Y|y) maybe_correct[$1]=$2
+         declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
+         eval "$2 $args"
+  esac
 }
 
 # spdist ported from c to bash
 # original: lib/sh/spell.c
+# TODO: maybe change it to return 0/1
 spdist() {
   local cur=$1 new=$2 i
   [[ $1 = "$2" ]] && return # exact match
@@ -87,5 +82,28 @@ spdist() {
     return 2  # missing character
   fi
   return 3
+}
+
+# for a faster look up, we only run it once during the installation
+typo_cache() {
+  [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
+  declare -A maybe_correct
+  local len i cmd tmp
+  # random list of commands
+  for cmd in bash git sudo python iptables uname node perl wget curl tmux screen; do
+    type "$cmd" &>/dev/null || continue
+    len=${#cmd}
+    # swap two characters
+    for (( i = 1; i < len; i++ )); do
+      tmp=${cmd:0:i-1}${cmd:i:1}${cmd:i-1:1}${cmd:i+1}
+      [[ -v 'maybe_correct[$tmp]' ]] || maybe_correct[$tmp]=$cmd
+    done
+    # remove characters
+    for (( i = 0; i < len; i++ )); do
+      tmp=${cmd:0:i}${cmd:i+1}
+      [[ -v 'maybe_correct[$tmp]' ]] || maybe_correct[$tmp]=$cmd
+    done
+  done
+  declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
 }
 
