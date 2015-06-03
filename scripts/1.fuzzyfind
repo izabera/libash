@@ -137,5 +137,5 @@ find () {
 
     shift
   done
-  command find "${newargs[@]}"
+  command find "${newargs[@]}" | output?
 }

@@ -311,3 +311,8 @@ _asciinema () {
   (( ng )) && builtin shopt -u nullglob
 }
 complete -o bashdefault -o filenames -F _asciinema asciinema
+
+_imgurbash () {
+  mapfile -t COMPREPLY < <( compgen -G "$2*.@(png|jp?(e)g|gif)" )
+}
+complete -o bashdefault -o filenames -F _imgurbash imgurbash
