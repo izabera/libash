@@ -2,6 +2,10 @@
 
 # zsh-like correction
 command_not_found_handle() {
+  if [[ -z $1 ]]; then
+    printf "%s: command not found: %s\n" "$0" "$1"
+    return 127
+  fi
   [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
   declare -A {never,always,maybe}_correct
   local args
@@ -15,7 +19,7 @@ command_not_found_handle() {
     return
   fi
   if [[ -v 'maybe_correct[$1]' ]]; then
-    ask_correction "$1" "$cmd"
+    ask_correction "$1" "${maybe_correct[$1]}"
     return
   fi
   local cmd
@@ -104,6 +108,6 @@ typo_cache() {
       [[ -v 'maybe_correct[$tmp]' ]] || maybe_correct[$tmp]=$cmd
     done
   done
-  declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
+  declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null || :
 }
 
