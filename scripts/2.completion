@@ -281,7 +281,7 @@ complete -o bashdefault -F _toybox toybox
 
 
 # enhanced shopt to accept shell options
-complete -o bashdefault -A shopt -A setopt shopt
+complete -o bashdefault -A shopt -A setopt shopt setopt unsetopt
 
 
 _asciinema () {
