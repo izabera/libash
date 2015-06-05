@@ -7,13 +7,9 @@ command_not_found_handle() {
     return 127
   fi
   [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
-  declare -A {never,always,maybe}_correct
+  declare -A {always,maybe}_correct
   local args
   printf -v args "%q " "${@:2}"
-  if [[ -v 'never_correct[$1]' ]]; then
-    printf "%s: command not found: %s\n" "$0" "$1"
-    return 127
-  fi
   if [[ -v 'always_correct[$1]' ]]; then
     eval "${always_correct[$1]} $args"
     return
@@ -52,15 +48,12 @@ ask_correction() {
   case $answer in
     A|a) always_correct[$1]=$2
          unset 'maybe_correct[$1]'
-         declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
+         declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
          eval "${always_correct[$1]}" "$args" ;;
-    N|n) never_correct[$1]=$2
-         printf "%s: command not found: %s\n" "$0" "$1"
-         unset 'maybe_correct[$1]'
-         declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
+    N|n) printf "%s: command not found: %s\n" "$0" "$1"
          return 127 ;;
     Y|y) maybe_correct[$1]=$2
-         declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
+         declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
          eval "$2 $args"
   esac
 }
@@ -94,8 +87,9 @@ typo_cache() {
   declare -A maybe_correct
   local len i cmd tmp
   # random list of commands
-  for cmd in bash git sudo python iptables uname node perl wget curl tmux screen; do
-    type "$cmd" &>/dev/null || continue
+  for cmd in bash git sudo python iptables uname node perl wget curl tmux screen \
+    "$@"; do
+    type -- "$cmd" &>/dev/null || continue
     len=${#cmd}
     # swap two characters
     for (( i = 1; i < len; i++ )); do
@@ -108,6 +102,6 @@ typo_cache() {
       [[ -v 'maybe_correct[$tmp]' ]] || maybe_correct[$tmp]=$cmd
     done
   done
-  declare -p {never,always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null || :
+  declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null || :
 }
 
