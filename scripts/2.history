@@ -1,2 +1,20 @@
 #!/bin/bash
 : "${HISTCONTROL=ignoredups}" "${HISTIGNORE=fg:ls}"
+
+declare -gA histignore
+add_to_histignore () {
+  local arg
+  for arg do
+    [[ -v 'histignore[$arg]' ]] || histignore[$arg]=
+  done
+  HISTIGNORE=
+  for arg in "${!histignore[@]}"; do
+    HISTIGNORE+=${arg//:/[[.colon.]]}:
+  done
+  # trailing : shouldn't matter
+}
+
+IFS=: read -ra i <<< "$HISTIGNORE" # i is local in the caller
+add_to_histignore "${i[@]}"
+
+[[ -o vi ]] && add_to_histignore :{x,{,w}q}{,a}
