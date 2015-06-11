@@ -9,7 +9,7 @@ command_not_found_handle() {
   [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
   declare -A {always,maybe}_correct
   local args
-  printf -v args "%q " "${@:2}"
+  (( $# > 1 )) && printf -v args "%q " "${@:2}"
   if [[ -v 'always_correct[$1]' ]]; then
     eval "${always_correct[$1]} $args"
     return
