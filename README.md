@@ -34,8 +34,11 @@ Stuff included (now with screenshots!)
 - something similar to `moreutils` that works with shell syntax:  
    `mispipe 1  cmd1 | grep string | cmd2` returns the exit code of grep
 - useful functions and much moar  
+  - connectivity testing
    ![isup](http://i.imgur.com/k5ztoJj.png)  
+  - fuzzy find
    ![fuzzyfind](http://i.imgur.com/4gEbAUa.png)  
+  - quicker navigation
    ![mkdirc uprm](http://i.imgur.com/XXhY3lW.png)
 
 
