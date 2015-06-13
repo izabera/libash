@@ -2,8 +2,9 @@
 
 # zsh-like correction
 command_not_found_handle() {
+  local FUNCNEST=10
   if [[ -z $1 ]]; then
-    printf "%s: command not found: %s\n" "$0" "$1"
+    printf "%s: command not found: %s\n" "$0" "$1" >&2
     return 127
   fi
   [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
@@ -33,8 +34,12 @@ command_not_found_handle() {
   if (( ${#cmd[@]} )); then
     ask_correction "$1" "$cmd"
   else
-    printf "%s: command not found: %s\n" "$0" "$1"
-    return 127
+    if declare -f command_not_found_handle_before_libash &>/dev/null; then
+      command_not_found_handle_before_libash
+    else
+      printf "%s: command not found: %s\n" "$0" "$1" >&2
+      return 127
+    fi
   fi
 }
 
@@ -50,7 +55,7 @@ ask_correction() {
          unset 'maybe_correct[$1]'
          declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
          eval "${always_correct[$1]}" "$args" ;;
-    N|n) printf "%s: command not found: %s\n" "$0" "$1"
+    N|n) printf "%s: command not found: %s\n" "$0" "$1" >&2
          return 127 ;;
     Y|y) maybe_correct[$1]=$2
          declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
