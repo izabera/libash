@@ -137,6 +137,8 @@ stty () {
 # use a function to avoid calling the DEBUG trap more than once
 PROMPT_COMMAND=prompt_command
 prompt_command () {
+  # great idea from kurahaupo!
+  printf "%s$%s%*s\r" "$_red" "$_no_color" "$((COLUMNS-1))"
   collapsed_wd
   libash_hook_handler
   #undefC-cC-z
