@@ -74,7 +74,11 @@ collapsed_wd () {
   builtin shopt -q nullglob; ng=$?; builtin shopt -s nullglob
   builtin shopt -q dotglob; dg=$?; builtin shopt -s dotglob
   cwd=$PWD/ tilde="~" # bash didn't perform quote removal in the replacement until 4.3
-  IFS=/ read -ra cwd <<< "${cwd/#"$HOME"\//$tilde/}"
+  if [[ $HOME ]]; then
+    IFS=/ read -ra cwd <<< "${cwd/#"$HOME"\//$tilde/}"
+  else
+    IFS=/ read -ra cwd <<< "$cwd"
+  fi
   if [[ $cwd ]]; then
     shortcwd="~" pathsofar=$HOME
   else
