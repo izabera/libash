@@ -20,7 +20,8 @@ command_not_found_handle() {
     return
   fi
   local cmd
-  mapfile -t cmd < <(compgen -c)
+  # only search for commands that are ${#1} +/-1 long
+  mapfile -t cmd < <(compgen -c | sed -n "/^.\{$((${#1}?${#1}-1:0)),$((${#1}+1))\}$/p")
   for cmd in "${cmd[@]}"; do
     spdist "$1" "$cmd"
     if (( $? < 3 )); then
