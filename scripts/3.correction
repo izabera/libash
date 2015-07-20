@@ -46,9 +46,9 @@ command_not_found_handle() {
 
 ask_correction() {
   local answer
-  printf "%s: correct '%s' to '%s' [nya]? " "$0" "$1" "$2"
+  printf "%s: correct '%s' to '%s' [nya]? " "$0" "$1" "$2" >/dev/tty
   while [[ $answer != [nNyYaA] ]]; do
-    read -rsn1 answer
+    read -rsn1 answer < /dev/tty
   done
   echo "$answer"
   case $answer in
@@ -56,7 +56,7 @@ ask_correction() {
          unset 'maybe_correct[$1]'
          declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
          eval "${always_correct[$1]}" "$args" ;;
-    N|n) printf "%s: command not found: %s\n" "$0" "$1" >&2
+    N|n) printf "%s: command not found: %s\n" "$0" "$1" >/dev/tty
          return 127 ;;
     Y|y) maybe_correct[$1]=$2
          declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
