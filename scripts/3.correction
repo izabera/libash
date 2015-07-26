@@ -38,7 +38,7 @@ command_not_found_handle() {
     if declare -f command_not_found_handle_before_libash &>/dev/null; then
       command_not_found_handle_before_libash
     else
-      printf "%s: command not found: %s\n" "$0" "$1" >&2
+      printf "%s: command not found: %q\n" "$0" "$1" >&2
       return 127
     fi
   fi

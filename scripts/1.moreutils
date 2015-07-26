@@ -16,7 +16,7 @@ sponge () {
 # usage: command | ts > logfile
 
 ts () {
-  local format=${1-%c}
+  local format=${1-%c} REPLY
   while read -r ; do printf "%($format)T %s\n" -1 "$REPLY"; done
 }
 

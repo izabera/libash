@@ -14,7 +14,7 @@ aringa-helper () {
   history 1 | {
     read -r _ _ command
     tilde="~"
-    dir=${PWD/#"$HOME"/$tilde} dir=${dir/\/}
+    dir=${PWD/#"$HOME"/$tilde} dir=${dir/%\/}
     {
       printf '%s@%s %s $ %s\n' "$USER" "$HOSTNAME" "$dir" "$command"
       eval "$command"
