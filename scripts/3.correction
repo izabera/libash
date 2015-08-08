@@ -111,3 +111,20 @@ typo_cache() {
   declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null || :
 }
 
+correct () {
+  local arg {always,maybe}_correct
+  [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
+  if (($#)); then   # if with args, set new corrections
+    for arg do
+      case $arg in
+        *=*) always_correct[${arg%%=*}]=${arg#*=} ;;
+        *) printf "Error: unknown argument: %s\n" "$arg" ;;
+      esac
+    done
+    declare -p always_correct > ~/.config/libash/corrections 2>/dev/null || :
+  else              # otherwise print them
+    for arg in "${!always_correct[@]}"; do
+      printf "%s=%s\n" "$arg" "${always_correct[$arg]}"
+    done
+  fi
+}

@@ -65,3 +65,5 @@ mispipe-helper () {
 # doesn't work with heredocs
 alias mispipe='mispipe-helper #'
 
+noglob () { set +f; "$@"; }
+alias noglob='set -f; noglob '
