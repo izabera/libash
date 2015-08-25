@@ -3,8 +3,8 @@
 # saving colors to avoid having to use tput again
 # use different files for different terminals
 # (some terminals (e.g. linux console) don't support bright colors)
-if [[ -r /tmp/libash/colors-${TERM:=dumb} ]]; then
-  . "/tmp/libash/colors-$TERM"
+if [[ -r $HOME/.config/libash/colors-${TERM:=dumb} ]]; then
+  . "$HOME/.config/libash/colors-$TERM"
 else
   _black=$(tput setaf 0)    _bright_black=$(tput setaf 8)
   _red=$(tput setaf 1)      _bright_red=$(tput setaf 9)
@@ -20,7 +20,7 @@ else
            "$_bright_black" "$_bright_red"     "$_bright_green" "$_bright_yellow"
            "$_bright_blue"  "$_bright_magenta" "$_bright_cyan"  "$_bright_white" "$_no_color")
   {
-    printf '%s=%q\n' _black           "$_black"           \
+    printf "%s=%q\n" _black           "$_black"           \
                      _red             "$_red"             \
                      _green           "$_green"           \
                      _yellow          "$_yellow"          \
@@ -38,38 +38,16 @@ else
                      _bright_white    "$_bright_white"    \
                      _no_color "$_no_color"
     for i in "${!_colors[@]}"; do
-      printf '_colors[%s]=%q\n' "$i" "${_colors[i]}"
+      printf "_colors[%s]=%q\n" "$i" "${_colors[i]}"
     done
-  } > "/tmp/libash/colors-$TERM"
+    printf "_hostcolor=%s\n" "$(( _hostcolor = (64#${HOSTNAME//[!a-zA-Z_@]} & (~0^(1<<63))) % 6 + 1 ))"
+  } > "$HOME/.config/libash/colors-$TERM"
 fi
-
-return_value () {
-  (( $? == 0 )) && printf %s%d%s "$_green" "$?" "$_no_color" || printf %s%d%s "$_red" "$?" "$_no_color"
-}
-
-return_status () {
-  (( $? == 0 )) && printf %s "$_green" || printf %s "$_red"
-}
-
-# /path/to/dir  ->  /p/t/dir
-simple_collapsed_wd () {
-  local cwd i tilde
-  cwd=$PWD/ tilde="~"
-  IFS=/ read -ra cwd <<< "${cwd/#"$HOME"\//$tilde/}"
-  if [[ $cwd ]]; then
-    shortcwd="~"
-  else
-    shortcwd=
-  fi
-  for (( i = 1; i < ${#cwd[@]}; i ++ )); do
-    shortcwd+=/${cwd[i]::1}
-  done
-  [[ $shortcwd = */?* ]] && shortcwd=${shortcwd%/*}/${cwd[@]: -1}
-}
 
 # /path/to/dir  ->  /p/t/dir
 # handles collisions correctly!
 collapsed_wd () {
+  if [[ $previous_cmd_pwd = "$PWD" ]]; then return; else previous_cmd_pwd=$PWD; fi
   local cwd tilde i j pathsofar ambiguous ng dg
   builtin shopt -q nullglob; ng=$?; builtin shopt -s nullglob
   builtin shopt -q dotglob; dg=$?; builtin shopt -s dotglob
@@ -89,7 +67,7 @@ collapsed_wd () {
     for (( j = 0; j < ${#cwd[i]}; j ++ )); do
       pathsofar+=${cwd[i]:j:1}
       ambiguous=("$pathsofar"*/)  # this is wrong if $PWD is not an existing path BUT THAT'S YOUR FAULT
-      [[ ${#ambiguous[@]} -eq 1 ]] && break
+      (( ${#ambiguous[@]} == 1 )) && break
     done
     shortcwd+=/${pathsofar##*/}
     pathsofar=${pathsofar%/*}/${cwd[i]}
@@ -127,16 +105,10 @@ collapsed_wd () {
 alias simpleprompt="trap - DEBUG; PROMPT_COMMAND= PS1='\u@\h \w \$ '; tput sgr0"
 
 # got the array idea from greycat
-PS1='\[$_green\]\u\[$_no_color\]@\[$_cyan\]\h\[$_no_color\] \[$_red\]${shortcwd//\//\[$_bright_red\]/\[$_red\]}\[$_no_color\] \[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
-
-saved_stty=$(command stty -g)
-stty () {
-  local status
-  command stty "$@"
-  status=$?
-  saved_stty=$(command stty -g)
-  return "$status"
-}
+PS1='\[${_colors[1+(EUID != 0)]}\]\u\[$_no_color\]@'
+PS1+='\[${_colors[_hostcolor]}\]\h\[$_no_color\] '
+PS1+='\[$_red\]${shortcwd//\//\[$_bright_red\]/\[$_red\]}\[$_no_color\] '
+PS1+='\[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
 
 # use a function to avoid calling the DEBUG trap more than once
 PROMPT_COMMAND=prompt_command
@@ -144,32 +116,7 @@ prompt_command () {
   # great idea from kurahaupo!
   printf "%s$%s%*s\r" "$_red" "$_no_color" "$((COLUMNS-1))"
   collapsed_wd
-  libash_hook_handler
+  #libash_hook_handler
   #undefC-cC-z
-}
-
-# use the prompt flag to avoid calling stty several times
-# in the DEBUG trap with compound commands
-undefC-cC-z () {
-  (( ! prompt_flag )) && command stty intr undef susp undef < /dev/tty
-  prompt_flag=1
-}
-
-resetC-cC-z () {
-  (( prompt_flag )) && command stty "$saved_stty" < /dev/tty
-  prompt_flag=0
-}
-
-#bind '\C-z: "\C-cfg\C-m"' '\C-c: kill-whole-line'
-#bind -m vi-command '\C-z: "\C-cifg\C-m"'
-#bind -m vi-move '\C-z: "\C-cifg\C-m"'
-
-# save the last arg in  __ then restore it
-#trap '__=$_; debug_trap "$BASH_COMMAND"; : "$__"' DEBUG
-
-debug_trap () {
-  # cat files with < like in zsh
-  [[ $1 = " <"* ]] && eval cat "$1"
-  #resetC-cC-z
 }
 
