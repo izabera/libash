@@ -21,18 +21,15 @@ command_not_found_handle() {
   fi
   local cmd
   # only search for commands that are ${#1} +/-1 long
-  mapfile -t cmd < <(compgen -c | sed -n "/^.\{$((${#1}?${#1}-1:0)),$((${#1}+1))\}$/p")
-  for cmd in "${cmd[@]}"; do
-    spdist "$1" "$cmd"
-    if (( $? < 3 )); then
+  while read -r cmd; do
+    if spdist "$1" "$cmd"; then
       ask_correction "$1" "$cmd"
       return
     fi
-  done
+  done < <(compgen -c | awk -v "len=${#1}" '!a[$0]++ && len >= length - 1 && len <= length + 1')
 
   # search for a command that starts with $1 but it's longer than ${#1} + 1 characters
-  mapfile -t cmd < <(compgen -c -- "$1")
-  if (( ${#cmd[@]} )); then
+  if read -r cmd < <(compgen -c -- "$1" | awk -v "len=${#1}" "length > len + 1"); then
     ask_correction "$1" "$cmd"
   else
     if declare -f command_not_found_handle_before_libash &>/dev/null; then
@@ -66,25 +63,17 @@ ask_correction() {
 
 # spdist ported from c to bash
 # original: lib/sh/spell.c
-# TODO: maybe change it to return 0/1
 spdist() {
   local cur=$1 new=$2 i
-  [[ $1 = "$2" ]] && return # exact match
   while [[ ${1:i:1} = "${2:i:1}" ]]; do (( i++ )); done
   cur=${1:i} new=${2:i}
-  if [[ $cur ]]; then
-    if [[ $new ]]; then
-       [[ ${cur:1} && ${new:1} && ${cur::1} = "${new:1:1}" &&
-          ${cur:1:1} = "${new::1}" && ${cur:2} = "${new:2}" ]] &&
-          return 1 # transposition
-       [[ ${cur:1} = "${new:1}" ]] && return 2 # one character mismatch
-    fi
-    [[ ${cur:1} = "$new" ]] && return 2 # extra character
+  if [[ ${cur:0:1} = "${new:1:1}" && ${cur:1:1} = "${new::1}" &&
+        ${cur:1:1} = "${new::1}" && ${cur:2} = "${new:2}" ]]; then return
+  elif [[ ${cur:1} = "${new:1}" ]]; then return
+  elif [[ ${cur:1} = "$new" ]]; then return
+  elif [[ ${new:1} = "$cur" ]]; then return
+  else return 1
   fi
-  if [[ $new && ${new:1} = "$cur" ]]; then
-    return 2  # missing character
-  fi
-  return 3
 }
 
 # for a faster look up, we only run it once during the installation
@@ -100,12 +89,14 @@ typo_cache() {
     # swap two characters
     for (( i = 1; i < len; i++ )); do
       tmp=${cmd:0:i-1}${cmd:i:1}${cmd:i-1:1}${cmd:i+1}
-      [[ -v 'maybe_correct[$tmp]' ]] || maybe_correct[$tmp]=$cmd
+      #[[ -v 'maybe_correct[$tmp]' ]] || maybe_correct[$tmp]=$cmd
+      maybe_correct[$tmp]=$cmd
     done
     # remove characters
     for (( i = 0; i < len; i++ )); do
       tmp=${cmd:0:i}${cmd:i+1}
-      [[ -v 'maybe_correct[$tmp]' ]] || maybe_correct[$tmp]=$cmd
+      #[[ -v 'maybe_correct[$tmp]' ]] || maybe_correct[$tmp]=$cmd
+      maybe_correct[$tmp]=$cmd
     done
   done
   declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null || :

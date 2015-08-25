@@ -36,7 +36,7 @@ setopt () {
   if (( $# )); then
     shopt -s -- "$@"
   else
-    shopt -s; shopt -so
+    builtin shopt -s; builtin shopt -so
   fi
 }
 
@@ -44,6 +44,6 @@ unsetopt () {
   if (( $# )); then
     shopt -u -- "$@"
   else
-    shopt -u; shopt -uo
+    builtin shopt -u; builtin shopt -uo
   fi
 }
