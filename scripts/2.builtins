@@ -36,7 +36,7 @@ setopt () {
   if (( $# )); then
     shopt -s -- "$@"
   else
-    builtin shopt -s; builtin shopt -so
+    { builtin shopt -s; builtin shopt -so ; } | sort | awk '{ print $1 }'
   fi
 }
 
@@ -44,6 +44,6 @@ unsetopt () {
   if (( $# )); then
     shopt -u -- "$@"
   else
-    builtin shopt -u; builtin shopt -uo
+    { builtin shopt -u; builtin shopt -uo ; } | sort | awk '{ print $1 }'
   fi
 }

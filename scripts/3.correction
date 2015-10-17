@@ -76,43 +76,17 @@ spdist() {
   fi
 }
 
-# for a faster look up, we only run it once during the installation
-typo_cache() {
-  [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
-  declare -A maybe_correct
-  local len i cmd tmp
-  # random list of commands
-  for cmd in bash git sudo python iptables uname node perl wget curl tmux screen \
-    "$@"; do
-    type -- "$cmd" &>/dev/null || continue
-    len=${#cmd}
-    # swap two characters
-    for (( i = 1; i < len; i++ )); do
-      tmp=${cmd:0:i-1}${cmd:i:1}${cmd:i-1:1}${cmd:i+1}
-      #[[ -v 'maybe_correct[$tmp]' ]] || maybe_correct[$tmp]=$cmd
-      maybe_correct[$tmp]=$cmd
-    done
-    # remove characters
-    for (( i = 0; i < len; i++ )); do
-      tmp=${cmd:0:i}${cmd:i+1}
-      #[[ -v 'maybe_correct[$tmp]' ]] || maybe_correct[$tmp]=$cmd
-      maybe_correct[$tmp]=$cmd
-    done
-  done
-  declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null || :
-}
-
-correct () {
-  local arg {always,maybe}_correct
+typo_correct () {
+  local arg; declare -A {always,maybe}_correct
   [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
   if (($#)); then   # if with args, set new corrections
     for arg do
       case $arg in
-        *=*) always_correct[${arg%%=*}]=${arg#*=} ;;
+        ?*=*) always_correct[${arg%%=*}]=${arg#*=} ;;
         *) printf "Error: unknown argument: %s\n" "$arg" ;;
       esac
     done
-    declare -p always_correct > ~/.config/libash/corrections 2>/dev/null || :
+    declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null || :
   else              # otherwise print them
     for arg in "${!always_correct[@]}"; do
       printf "%s=%s\n" "$arg" "${always_correct[$arg]}"

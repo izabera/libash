@@ -16,3 +16,85 @@ git_hook () {
   $extdebug || shopt -s extdebug
 }
 
+return_value () {
+  (( $? == 0 )) && printf %s%d%s "$_green" "$?" "$_no_color" || printf %s%d%s "$_red" "$?" "$_no_color"
+}
+
+return_status () {
+  (( $? == 0 )) && printf %s "$_green" || printf %s "$_red"
+}
+
+ /path/to/dir  ->  /p/t/dir
+simple_collapsed_wd () {
+  local cwd i tilde
+  cwd=$PWD/ tilde="~"
+  IFS=/ read -ra cwd <<< "${cwd/#"$HOME"\//$tilde/}"
+  if [[ $cwd ]]; then
+    shortcwd="~"
+  else
+    shortcwd=
+  fi
+  for (( i = 1; i < ${#cwd[@]}; i ++ )); do
+    shortcwd+=/${cwd[i]::1}
+  done
+  [[ $shortcwd = */?* ]] && shortcwd=${shortcwd%/*}/${cwd[@]: -1}
+}
+
+saved_stty=$(command stty -g)
+stty () {
+  local status
+  command stty "$@"
+  status=$?
+  saved_stty=$(command stty -g)
+  return "$status"
+}
+
+ use the prompt flag to avoid calling stty several times
+ in the DEBUG trap with compound commands
+undefC-cC-z () {
+  (( ! prompt_flag )) && command stty intr undef susp undef < /dev/tty
+  prompt_flag=1
+}
+
+resetC-cC-z () {
+  (( prompt_flag )) && command stty "$saved_stty" < /dev/tty
+  prompt_flag=0
+}
+
+bind '\C-z: "\C-cfg\C-m"' '\C-c: kill-whole-line'
+bind -m vi-command '\C-z: "\C-cifg\C-m"'
+bind -m vi-move '\C-z: "\C-cifg\C-m"'
+
+ save the last arg in  __ then restore it
+trap '__=$_; debug_trap "$BASH_COMMAND"; : "$__"' DEBUG
+
+debug_trap () {
+   cat files with < like in zsh
+  [[ $1 = " <"* ]] && eval cat "$1"
+  resetC-cC-z
+}
+
+cd () {
+  previous_cmd_pwd=$PWD
+  chpwd_hook
+  builtin cd "$@"
+}
+
+awkcorrect () {
+  # todo, should be faster
+  awk -v cur="$1" '
+    function prexit() { print; exit }
+    { i = 1
+      while (substr(cur,i,1) == substr($0,i,1)) i++
+      cur = substr(cur,i);
+      new = substr($0,i);
+      if (substr(cur,1,1) == substr(new,2,1) &&
+          substr(cur,2,1) == substr(new,1,1) &&
+          substr(cur,2) == substr(new,2)) prexit()
+      if (substr(cur,1) == substr(new,1)) prexit()
+      if (substr(cur,2) == new) prexit()
+      if (substr(new,2) == cur) prexit()
+    }
+  '
+}
+

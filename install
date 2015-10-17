@@ -1,0 +1,69 @@
+#!/bin/bash
+cols=${COLUMNS:-$(tput cols)}
+msg() {
+  printf "%s %*s%6s]\n" "$1" "$(( cols - ${#1} - 8 ))" "[" "$2"
+  #                                              ^ 8 = [ + ] + %6s
+}
+
+ask() {
+  printf %b "$1"
+  REPLY=
+  while [[ $REPLY != ["$2"] ]]; do read -sn1; done
+  printf "%s\n" "$REPLY"
+}
+
+mkdir -p ~/.config/libash &&
+msg "Creating config directory" ||
+{ msg "Creating config directory" FAIL; exit 1; }
+
+# for a faster look up
+[[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
+declare -A maybe_correct
+# random list of commands
+for cmd in bash sh git sudo python iptables uname node perl wget curl tmux screen \
+  tar grep find ssh sed awk vim emacs diff sort pwd gzip free {h,}top kill cp cat \
+  mv ls du dd df rm rmdir mount ch{mod,own} passwd mkdir locate man tail head less \
+  ping date file apt{,-get,itude} pacman yum rpm which ifconfig scp nano vi svn hg; do
+  type -- "$cmd" &>/dev/null || continue
+  len=${#cmd}
+  # swap two characters
+  for (( i = 1; i < len; i++ )); do
+    tmp=${cmd:0:i-1}${cmd:i:1}${cmd:i-1:1}${cmd:i+1}
+    maybe_correct[$tmp]=$cmd
+  done
+  # remove characters
+  for (( i = 0; i < len; i++ )); do
+    tmp=${cmd:0:i}${cmd:i+1}
+    maybe_correct[$tmp]=$cmd
+  done
+done
+declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null &&
+msg "Installing corrections" OK ||
+msg "Installing corrections" FAIL
+
+
+if [[ -e ~/.inputrc ]]; then
+  ask "Found a .inputrc\n[O]verwrite  [A]ppend  [S]kip  " OoAaSs
+  case $REPLY in
+    O|o)
+         if ln -fs "$LIBASHDIR/extra/inputrc" ~/.inputrc; then
+           msg "Installing keybindings" OK
+         else
+           msg "Installing keybindings" FAIL
+         fi ;;
+    A|a) if cat "$LIBASHDIR/extra/inputrc" >> ~/.inputrc; then
+           msg "Installing keybindings" OK
+         else
+           msg "Installing keybindings" FAIL
+         fi ;;
+    S|s) msg "Installing keybindings" SKIP
+  esac
+else
+  if ln -s "$LIBASHDIR/extra/inputrc" ~/.inputrc; then
+    msg "Installing keybindings" OK
+  else
+    msg "Installing keybindings" FAIL
+  fi
+fi
+
+msg "All done!" FINISH

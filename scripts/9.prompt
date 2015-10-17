@@ -14,11 +14,12 @@ else
   _magenta=$(tput setaf 5)  _bright_magenta=$(tput setaf 13)
   _cyan=$(tput setaf 6)     _bright_cyan=$(tput setaf 14)
   _white=$(tput setaf 7)    _bright_white=$(tput setaf 15)
-  _no_color=$(tput sgr 0)
+  _no_color=$(tput sgr 0)   _bold=$(tput bold)
   _colors=("$_black"        "$_red"            "$_green"        "$_yellow"
            "$_blue"         "$_magenta"        "$_cyan"         "$_white"
            "$_bright_black" "$_bright_red"     "$_bright_green" "$_bright_yellow"
-           "$_bright_blue"  "$_bright_magenta" "$_bright_cyan"  "$_bright_white" "$_no_color")
+           "$_bright_blue"  "$_bright_magenta" "$_bright_cyan"  "$_bright_white"
+           "$_no_color"     "$_bold")
   {
     printf "%s=%q\n" _black           "$_black"           \
                      _red             "$_red"             \
@@ -36,7 +37,8 @@ else
                      _bright_magenta  "$_bright_magenta"  \
                      _bright_cyan     "$_bright_cyan"     \
                      _bright_white    "$_bright_white"    \
-                     _no_color "$_no_color"
+                     _no_color        "$_no_color"        \
+                     _bold            "$_bold"
     for i in "${!_colors[@]}"; do
       printf "_colors[%s]=%q\n" "$i" "${_colors[i]}"
     done
@@ -113,8 +115,23 @@ PS1+='\[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
 # use a function to avoid calling the DEBUG trap more than once
 PROMPT_COMMAND=prompt_command
 prompt_command () {
-  # great idea from kurahaupo!
-  printf "%s$%s%*s\r" "$_red" "$_no_color" "$((COLUMNS-1))"
+  # yay patchwork coding
+  local old=$(stty -g)                                              # from lhunath
+  stty raw                                                          # from lhunath
+
+  # ask the tty the cursor position, if possible (i.e. the user didn't type anything)
+  if ! read -t 0 < /dev/tty; then                                   # from lhunath
+    local row col
+    stty -echo                                                      # from koala_man
+    printf '\e[6n' > /dev/tty                                       # from lhunath
+    IFS='[;' read -dR _ row col < /dev/tty                          # from lhunath
+    stty echo                                                       # from koala_man
+    (( col != 1 )) && printf "%s$%s\r\n" "$_blue" "$_no_color"
+  else
+    printf "%s$%s%*s\r" "$_red" "$_no_color" "$((COLUMNS-1))"       # from kurahaupo
+  fi
+  stty "$old"                                                       # from lhunath
+
   collapsed_wd
   #libash_hook_handler
   #undefC-cC-z
