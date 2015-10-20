@@ -7,8 +7,8 @@ msg() {
 
 ask() {
   printf %b "$1"
-  REPLY=
-  while [[ $REPLY != ["$2"] ]]; do read -sn1; done
+  read -sn1
+  while [[ $REPLY != $2 ]]; do read -sn1; done
   printf "%s\n" "$REPLY"
 }
 
@@ -43,7 +43,7 @@ msg "Installing corrections" FAIL
 
 
 if [[ -e ~/.inputrc ]]; then
-  ask "Found a .inputrc\n[O]verwrite  [A]ppend  [S]kip  " OoAaSs
+  ask "Found a .inputrc\n[O]verwrite  [A]ppend  [S]kip  " '[OoAaSs]'
   case $REPLY in
     O|o)
          if ln -fs "$LIBASHDIR/extra/inputrc" ~/.inputrc; then
