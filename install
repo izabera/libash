@@ -16,6 +16,7 @@ mkdir -p ~/.config/libash &&
 msg "Creating config directory" ||
 { msg "Creating config directory" FAIL; exit 1; }
 
+mkdir -p ~/.config/libash 2>/dev/null
 # for a faster look up
 [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
 declare -A maybe_correct
@@ -43,15 +44,15 @@ msg "Installing corrections" FAIL
 
 
 if [[ -e ~/.inputrc ]]; then
-  ask "Found a .inputrc\n[O]verwrite  [A]ppend  [S]kip  " '[OoAaSs]'
+  ask "Found a .inputrc\n[O]verwrite  [A]ppend  [S]kip  " "[OoAaSs]"
   case $REPLY in
     O|o)
-         if ln -fs "$LIBASHDIR/extra/inputrc" ~/.inputrc; then
+         if ln -fs "$PWD/extra/inputrc" ~/.inputrc; then
            msg "Installing keybindings" OK
          else
            msg "Installing keybindings" FAIL
          fi ;;
-    A|a) if cat "$LIBASHDIR/extra/inputrc" >> ~/.inputrc; then
+    A|a) if cat "$PWD/extra/inputrc" >> ~/.inputrc; then
            msg "Installing keybindings" OK
          else
            msg "Installing keybindings" FAIL
@@ -59,11 +60,13 @@ if [[ -e ~/.inputrc ]]; then
     S|s) msg "Installing keybindings" SKIP
   esac
 else
-  if ln -s "$LIBASHDIR/extra/inputrc" ~/.inputrc; then
+  if ln -s "$PWD/extra/inputrc" ~/.inputrc; then
     msg "Installing keybindings" OK
   else
     msg "Installing keybindings" FAIL
   fi
 fi
 
+msg "Adding to .bashrc"
+printf 'export LIBASHDIR=%q\nsource -- "$LIBASHDIR/libash"\n' "$PWD" >> ~/.bashrc
 msg "All done!" FINISH

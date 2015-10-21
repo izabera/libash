@@ -1,0 +1,51 @@
+set completion-ignore-case on
+set bell-style none
+set colored-stats on
+set match-hidden-files off
+
+# for programs that use readline but can't set it
+set editing-mode vi
+# M-C-j from emacs mode changes to vi
+# C-e from vi to emacs  (this doesn't seem to work?)
+
+
+################
+# completion
+################
+# zsh-like(?) completion
+Tab: menu-complete
+
+# tab completion in bc completes filenames for no reason
+$if bc
+  Tab:
+$endif
+
+# backtab
+"\C-[[Z": menu-complete-backward
+# shows all if there's more than one
+set show-all-if-ambiguous on
+#"\C-A": possible-completions
+
+# COOOOOOOL
+set menu-complete-display-prefix on
+
+
+set print-completions-horizontally on
+
+# M-a shows default-style completions
+"\ea": complete
+
+
+# alt + up
+"\e\e[A":history-search-backward
+# alt + down
+"\e\e[B":history-search-forward
+
+# C-w is usually bound to werase in stty
+set bind-tty-special-chars off
+
+# instead of unix-word-rubout which doesn't stop at /
+"\C-w": backward-kill-word
+
+# hate this
+set revert-all-at-newline on

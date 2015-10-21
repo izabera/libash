@@ -8,11 +8,10 @@ Collection of scripts that will make your bash experience much more pleasant.
 Installation
 ------------
 
-Simply clone this repo, and add this to your `.bashrc`
+Simply clone this repo, cd in your new directory and run `./install`
 
-```
-export LIBASHDIR="/your/path/here"
-source "$LIBASHDIR/libash"
+```bash
+git clone https://github.com/izabera/libash.git && cd libash && ./install
 ```
 
 

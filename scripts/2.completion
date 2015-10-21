@@ -74,7 +74,7 @@ _vim () {
   while read -r -d ''; do
     # mime type (remove : and leading whitespace)
     read -r _ type;
-    if [[ $type = @(text*|inode/x-empty*) ]]; then
+    if [[ $type = @(text*|message*|inode/x-empty*) ]]; then
       [[ $REPLY = "$HOME"/* && $2 = '~/'* ]] && REPLY=${REPLY/"$HOME"/$tilde}
       COMPREPLY+=("$REPLY")
     fi

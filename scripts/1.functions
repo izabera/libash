@@ -12,12 +12,7 @@ readinput () {
 # usage: mkdirc a/b/c/d/e/f
 
 mkdirc () {
-  if ((!$#)); then
-    echo "Usage: $0 directory..." >&2
-    return 1
-  else
-    mkdir -p -- "$@" && cd -- "$_"
-  fi
+  mkdir -p -- "$@" && cd -- "$_"
 }
 
 
@@ -127,31 +122,30 @@ abspath () {
     # part of this is from lhunath
 
     # test if the directory exist
-    if [[ -d $path ]] && path=$(cd "$path" && echo "$PWD"); then :
+    if [[ -d $path ]] && path=$(cd -P -- "$path" && printf %sx "$PWD"); then path=${path%x}
     # or if it's a file in an existing directory
-    elif [[ -d ${path%/*} ]] && path=$(cd "${path%/*}" && echo "$PWD/${path##*/}"); then :
+    elif [[ -d ${path%/*} ]] && path=$(cd -P -- "${path%/*}" && printf %sx "$PWD/${path##*/}")
     # need to check if we can cd in it ^
+      then path=${path%x}
 
     # if we have readlink, use that
-    elif readlink -m / >/dev/null 2>&1; then
-      path=$(readlink -m "$path")
+    elif type readlink &>/dev/null; then path=$(readlink -m "$path"; echo x) path=${path%x}
 
     # or realpath... hoping it's gnu realpath
-    elif realpath -m / >/dev/null 2>&1; then
-      path=$(realpath -m "$path")
+    elif type realpath &>/dev/null; then path=$(realpath -m "$path"; echo x) path=${path%x}
 
     else
       # add an extra / to be removed later on, to help with paths like /path/to/file/..
       path=$1/
+      path=${path//\/.\///}                # /foo/./bar/      -> /foo/bar/
+      path=${path//\/\///}                 # /foo//bar/       -> /foo/bar/
       while [[ $path = */@(|.|..)/* ]] ; do
-        path=${path//\/.\///}              # /foo/./bar/      -> /foo/bar/
-        path=${path//\/\///}               # /foo//bar/       -> /foo/bar/
         path=${path/#\/..\///}             # /../foo/         -> /foo/
         path=${path/\/+([!\/])\/..\///}    # /foo/bar/../baz/ -> /foo/baz/
       done
       [[ $path = / ]] || path=${path%/}
     fi
-    echo "$path"
+    printf "%s\n" "$path"
     shift
   done
   [[ -e $path ]]
@@ -354,8 +348,21 @@ numglob () {
 
 # true if it read at least one byte to read
 # useful for programs like find that use a stupid exit code
-output? () { LC_ALL=C read -rn1 -d '' && printf %b "${REPLY:-\0}" && cat; }
+output? () { local REPLY; LC_ALL=C read -rn1 -d '' && printf %b "${REPLY:-\0}" && cat; }
 
 # find swap files for vim
-vimfind() { find "${1-$HOME}" -type f -name "*${2-*}*.sw?" 2>/dev/null | output?; }
+vimfind() { command find "${1-$HOME}" -type f -name "*${2-*}*.sw?" 2>/dev/null | "output?"; }
 # vim can create files that don't start with . if directory is set
+
+
+# quick way to make programs believe that they're reading/writing from/to a terminal
+# from a stackoverflow answer
+faketty () { script -eqfc "$(printf "%q " "$@")" /dev/null; }
+
+# check if a file matches a glob
+# if exists /foo/bar*; then ...
+exists () [[ -e $1 ]]
+
+# stupid hack to simulate =( ) in zsh
+# cmd1 =(cmd2)   ->   cmd1 $(= cmd2)
+=() { local file=$(mktemp /tmp/removemeXXXXXX); "$@" > "$file"; echo "$file"; }
