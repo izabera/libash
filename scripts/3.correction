@@ -3,41 +3,45 @@
 # zsh-like correction
 command_not_found_handle() {
   local FUNCNEST=10
-  if [[ -z $1 ]]; then
+  if [[ -z $1 || $(type -t -- "$1" 2>/dev/null) = alias ]]; then
+    # if $1 is an alias from an expansion, reject it
     printf "%s: command not found: %s\n" "$0" "$1" >&2
     return 127
   fi
   [[ -r ~/.config/libash/corrections ]] && source ~/.config/libash/corrections
   declare -A {always,maybe}_correct
-  local args
-  (( $# > 1 )) && printf -v args "%q " "${@:2}"
   if [[ -v 'always_correct[$1]' ]]; then
-    eval "${always_correct[$1]} $args"
+    "${always_correct[$1]}" "${@:2}"
     return
   fi
   if [[ -v 'maybe_correct[$1]' ]]; then
-    ask_correction "$1" "${maybe_correct[$1]}"
+    ask_correction "$1" "${maybe_correct[$1]}" "${@:2}"
     return
   fi
+
+  # don't correct to aliases
+  unalias -a
+
   local cmd
   # only search for commands that are ${#1} +/-1 long
   while read -r cmd; do
     if spdist "$1" "$cmd"; then
-      ask_correction "$1" "$cmd"
+      ask_correction "$1" "$cmd" "${@:2}"
       return
     fi
   done < <(compgen -c | awk -v "len=${#1}" '!a[$0]++ && len >= length - 1 && len <= length + 1')
 
   # search for a command that starts with $1 but it's longer than ${#1} + 1 characters
-  if read -r cmd < <(compgen -c -- "$1" | awk -v "len=${#1}" "length > len + 1"); then
-    ask_correction "$1" "$cmd"
+  while read -r cmd; do
+    ask_correction "$1" "$cmd" "${@:2}"
+    return
+  done < <(compgen -c -- "$1" | awk -v "len=${#1}" "length > len + 1"); then
+
+  if declare -f before_libash_command_not_found_handle &>/dev/null; then
+    before_libash_command_not_found_handle "$@"
   else
-    if declare -f command_not_found_handle_before_libash &>/dev/null; then
-      command_not_found_handle_before_libash
-    else
-      printf "%s: command not found: %q\n" "$0" "$1" >&2
-      return 127
-    fi
+    printf "%s: command not found: %q\n" "$0" "$1" >&2
+    return 127
   fi
 }
 
@@ -52,12 +56,12 @@ ask_correction() {
     A|a) always_correct[$1]=$2
          unset 'maybe_correct[$1]'
          declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
-         eval "${always_correct[$1]}" "$args" ;;
+         "${always_correct[$1]}" "$@" ;;
     N|n) printf "%s: command not found: %s\n" "$0" "$1" >/dev/tty
          return 127 ;;
     Y|y) maybe_correct[$1]=$2
          declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
-         eval "$2 $args"
+         "$2" "$@"
   esac
 }
 

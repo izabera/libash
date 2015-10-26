@@ -68,5 +68,11 @@ else
 fi
 
 msg "Adding to .bashrc"
-printf 'export LIBASHDIR=%q\nsource -- "$LIBASHDIR/libash"\n' "$PWD" >> ~/.bashrc
+printf '
+export LIBASHDIR=%q
+if [[ $(type -t command_not_found_handle) = function ]]; then
+  eval before_libash_"$(declare -f command_not_found_handle)"
+fi
+source -- "$LIBASHDIR/libash"
+' "$PWD" >> ~/.bashrc
 msg "All done!" FINISH
