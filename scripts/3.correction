@@ -35,7 +35,7 @@ command_not_found_handle() {
   while read -r cmd; do
     ask_correction "$1" "$cmd" "${@:2}"
     return
-  done < <(compgen -c -- "$1" | awk -v "len=${#1}" "length > len + 1"); then
+  done < <(compgen -c -- "$1" | awk -v "len=${#1}" "length > len + 1")
 
   if declare -f before_libash_command_not_found_handle &>/dev/null; then
     before_libash_command_not_found_handle "$@"
