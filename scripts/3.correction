@@ -56,12 +56,12 @@ ask_correction() {
     A|a) always_correct[$1]=$2
          unset 'maybe_correct[$1]'
          declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
-         "${always_correct[$1]}" "$@" ;;
+         "${always_correct[$1]}" "${@:3}" ;;
     N|n) printf "%s: command not found: %s\n" "$0" "$1" >/dev/tty
          return 127 ;;
     Y|y) maybe_correct[$1]=$2
          declare -p {always,maybe}_correct > ~/.config/libash/corrections 2>/dev/null
-         "$2" "$@"
+         "$2" "${@:3}"
   esac
 }
 

@@ -267,7 +267,7 @@ complete -o bashdefault -F _busybox busybox
 
 _toybox () {
   type -P toybox > /dev/null || return
-  [[ -f /tmp/libash/toybox ]] || toybox | tr ' ' '\n' > /tmp/libash/toybox
+  [[ -f /tmp/libash/toybox ]] || toybox | tr -s ' ' '\n' > /tmp/libash/toybox
   if (( ${#COMP_WORDS[@]} < 3 )); then
     while read -r; do
       [[ $REPLY = "$2"* ]] && COMPREPLY+=("$REPLY")
