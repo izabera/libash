@@ -17,12 +17,12 @@ libash_compgen () {
   done
   shift $((OPTIND-1))
   [[ -d $1 && $1 != */ ]] && set -- "$1"/
-  if shopt -q nocaseglob; then case=no; fi
+  if builtin shopt -q nocaseglob; then case=no; fi
   if [[ $LIBASH_CASE = no || $(bind -v) = *"completion-ignore-case on"* ]]; then
-    shopt -s nocaseglob
+    builtin shopt -s nocaseglob
   fi
   completions=("$1"*)
-  if [[ $case = no ]]; then shopt -u nocaseglob; fi
+  if [[ $case = no ]]; then builtin shopt -u nocaseglob; fi
   for comp in "${completions[@]}"; do
     if [[ -f $comp ]]; then
       $f printf "%s$S" "$comp"
@@ -80,9 +80,9 @@ _vim () {
     fi
   done < <(
             if [[ $LIBASH_CASE = no || $(bind -v) = *"completion-ignore-case on"* ]]; then
-              shopt -s nocaseglob
+              builtin shopt -s nocaseglob
             fi
-            shopt -s nullglob
+            builtin shopt -s nullglob
             # don't check these, add them by default
             whitelist='@(c|h)?(pp)|txt|md|tex|py|pl|sh'
             # don't check these either
@@ -116,9 +116,9 @@ _vim () {
 
   # workaround, not perfect
   if [[ $2 = '~/' ]]; then
-    shopt -q nullglob; ng=$?; shopt -s nullglob
+    builtin shopt -q nullglob; ng=$?; builtin shopt -s nullglob
     local dirs=(~/*/)
-    (( ng )) && shopt -u nullglob
+    (( ng )) && builtin shopt -u nullglob
     dirs=("${dirs[@]%/}") dirs=("${dirs[@]/#"$HOME"/$tilde}")
     COMPREPLY+=("${dirs[@]}")
   fi
@@ -228,7 +228,7 @@ _shellcheck () {
   local blacklist='@(c|h)?(pp)|tex|pl|md|py|png|jp?(e)g|gif|mp[34]|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi'
   local whitelist='?(?(b|d)a|?(m)k|z)sh?(rc)'
 
-  shopt -q nullglob; ng=$?; shopt -s nullglob
+  builtin shopt -q nullglob; ng=$?; builtin shopt -s nullglob
   COMPREPLY=("$path"*.@($whitelist))
 
   for file in "$path"!(*.@($whitelist|$blacklist)); do
@@ -245,7 +245,7 @@ _shellcheck () {
     dirs=("${dirs[@]%/}") dirs=("${dirs[@]/#"$HOME"/$tilde}")
     COMPREPLY+=("${dirs[@]}")
   fi
-  (( ng )) && shopt -u nullglob
+  (( ng )) && builtin shopt -u nullglob
 }
 
 complete -o bashdefault -F _shellcheck shellcheck

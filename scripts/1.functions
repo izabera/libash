@@ -44,9 +44,9 @@ backup () {
 
 isempty () {
   local ret=0 files=() argnum=$# ng dg
-  shopt -q nullglob && ng=true || ng=false
-  shopt -q dotglob && dg=true || dg=false
-  shopt -s nullglob dotglob
+  builtin shopt -q nullglob && ng=true || ng=false
+  builtin shopt -q dotglob && dg=true || dg=false
+  builtin shopt -s nullglob dotglob
   set -- "${@-$PWD}"
   while (($#)); do
     if [[ ! -d $1 ]]; then
@@ -62,8 +62,8 @@ isempty () {
     fi
     shift
   done
-  "$ng" || shopt -u nullglob
-  "$dg" || shopt -u dotglob
+  "$ng" || builtin shopt -u nullglob
+  "$dg" || builtin shopt -u dotglob
   return "$ret"
 }
 

@@ -41,7 +41,7 @@ alias bc='bc -q'
 alias demsgf="dmesg --follow"
 
 
-if shopt -oq vi; then
+if builtin shopt -oq vi; then
   alias :{x,{,w}q}{,a}=exit
   alias :e=vim
   alias :h=man
@@ -56,7 +56,7 @@ if type colordiff &>/dev/null; then
   }
 fi
 
-shopt -s autocd
+builtin shopt -s autocd
 - () { [[ $OLDPWD ]] && cd - || printf %s\\n "$PWD"; }
 .. () { cd ..; }
 ... () { cd ../..; }
