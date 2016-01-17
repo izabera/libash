@@ -67,3 +67,18 @@ alias mispipe='mispipe-helper #'
 
 noglob () { set +f; "$@"; }
 alias noglob='set -f; noglob '
+
+dotglob () { builtin shopt -u dotglob; "$@"; }
+alias dotglob='builtin shopt -s dotglob; dotglob '
+
+nullglob () { builtin shopt -u nullglob; "$@"; }
+alias nullglob='builtin shopt -s nullglob; nullglob '
+
+failglob () { builtin shopt -u failglob; "$@"; }
+alias failglob='builtin shopt -s failglob; failglob '
+
+nocaseglob () { builtin shopt -u nocaseglob; "$@"; }
+alias nocaseglob='builtin shopt -s nocaseglob; nocaseglob '
+
+globasciiranges () { builtin shopt -u globasciiranges; "$@"; }
+alias globasciiranges='builtin shopt -s globasciiranges; globasciiranges '

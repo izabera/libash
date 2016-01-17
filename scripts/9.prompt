@@ -112,6 +112,10 @@ PS1+='\[${_colors[_hostcolor]}\]\h\[$_no_color\] '
 PS1+='\[$_red\]${shortcwd//\//\[$_bright_red\]/\[$_red\]}\[$_no_color\] '
 PS1+='\[${_colors[$? ? 1 : 2]}\]\$\[$_no_color\] '
 
+if (( time_in_prompt )); then
+  PS1+='$execution_time'
+fi
+
 # use a function to avoid calling the DEBUG trap more than once
 PROMPT_COMMAND=prompt_command
 prompt_command () {
@@ -133,7 +137,43 @@ prompt_command () {
   stty "$old"                                                       # from lhunath
 
   collapsed_wd
+  if (( time_in_prompt )); then
+    execution_time= debug_trap=0
+    local pattern cmd time=1
+    if (( ${#do_not_time[@]} )); then
+      read -r _ cmd < <(history 1)
+
+      # HISTCONTROL kinda messes this up
+      for pattern in "${do_not_time[@]}"; do
+        if [[ $cmd = $pattern ]]; then
+          time=0
+          break
+        fi
+      done
+    fi
+
+    if (( time )); then
+      if (( SECONDS > time_in_prompt_min )); then
+        if (( SECONDS > 3600 )); then
+          execution_time+=$((SECONDS / 3600))h
+          (( SECONDS %= 3600 ))
+        fi
+        if (( SECONDS > 60 )); then
+          execution_time+=$((SECONDS / 60))m
+          (( SECONDS %= 60 ))
+        fi
+        if (( SECONDS > 0 )); then
+          execution_time+=${SECONDS}s
+        fi
+        if [[ $execution_time ]]; then
+          execution_time="[$execution_time] "
+        fi
+      fi
+    fi
+    SECONDS=0
+  fi
   #libash_hook_handler
   #undefC-cC-z
 }
 
+trap '((time_in_prompt && !debug_trap++))&&SECONDS=0' debug

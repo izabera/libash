@@ -348,7 +348,13 @@ numglob () {
 
 # true if it read at least one byte to read
 # useful for programs like find that use a stupid exit code
-output? () { local REPLY; LC_ALL=C read -rn1 -d '' && printf %b "${REPLY:-\0}" && cat; }
+output? () (
+  local REPLY
+  [[ -t 0 ]] && exec < <(cat)
+  LC_ALL=C read -rn1 -d '' &&
+    printf %b "${REPLY:-\0}" &&
+    cat
+)
 
 # find swap files for vim
 vimfind() { command find "${1-$HOME}" -type f -name "*${2-*}*.sw?" 2>/dev/null | "output?"; }
