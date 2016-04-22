@@ -74,7 +74,7 @@ _vim () {
   while read -r -d ''; do
     # mime type (remove : and leading whitespace)
     read -r _ type;
-    if [[ $type = @(text*|message*|inode/x-empty*) ]]; then
+    if [[ $type = @(text*|message*|inode/x-empty|application/@(pgp-signature|postscript)) ]]; then
       [[ $REPLY = "$HOME"/* && $2 = '~/'* ]] && REPLY=${REPLY/"$HOME"/$tilde}
       COMPREPLY+=("$REPLY")
     fi
@@ -84,9 +84,11 @@ _vim () {
             fi
             builtin shopt -s nullglob
             # don't check these, add them by default
-            whitelist='@(c|h)?(pp)|txt|md|tex|py|pl|sh'
+            whitelist=${vim_completion_whitelist+$vim_completion_whitelist|}
+            whitelist+='@(c|h)?(pp)|txt|md|tex|py|pl|sh|sig|js|tcl'
             # don't check these either
-            blacklist='png|jp?(e)g|gif|mp[34]|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi'
+            blacklist=${vim_completion_blacklist+$vim_completion_blacklist|}
+            blacklist+='png|jp?(e)g|gif|mp[34]|ogg|tar|gz|xz|bz2|lzma|pdf|a|o|so|wav|flac|mov|flv|avi'
 
             # just assume that log files are ok to open
             # even if they end in something like .weechatlog

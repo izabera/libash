@@ -27,7 +27,7 @@ alias lynx='lynx -accept-all-cookies'
 alias tree='tree --charset fail'
 
 # so that urxvt doesn't break the links
-alias man='man --nj --nh'
+alias man='man --nj --nh -E ascii'
 
 # i hate getting permission denied on /proc or whatever
 alias find='silerr find'
@@ -113,9 +113,9 @@ fi
 
 make () {
   if [[ $1 = install ]]; then
-    sudo make "$@"
+    sudo make -j "$@"
   else
-    command make "$@"
+    command make -j "$@"
   fi
 }
 

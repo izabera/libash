@@ -129,10 +129,10 @@ abspath () {
       then path=${path%x}
 
     # if we have readlink, use that
-    elif type readlink &>/dev/null; then path=$(readlink -m "$path"; echo x) path=${path%x}
+    elif type readlink &>/dev/null; then path=$(readlink -m "$path"; echo x) path=${path%$'\nx'}
 
     # or realpath... hoping it's gnu realpath
-    elif type realpath &>/dev/null; then path=$(realpath -m "$path"; echo x) path=${path%x}
+    elif type realpath &>/dev/null; then path=$(realpath -m "$path"; echo x) path=${path%$'\nx'}
 
     else
       # add an extra / to be removed later on, to help with paths like /path/to/file/..
@@ -217,19 +217,18 @@ mecho () {
 
 # usage: isup [host...]
 # if no host, tries to connect to google
-# (it uses isitup api, but isup is shorter to type)
 
 isup () {
-  local ret=0
+  local ret
   if (($#)); then
-    for uri; do
-      IFS=', ' read _ _ status _ < <(curl -s "http://isitup.org/${uri}.txt")
-      [[ $status = 1 ]] && echo "$uri is online" || { echo "$uri is not online"; ret=1; }
+    for i do
+      curl --fail --silent --request POST --data "url=$i" --location http://arin.ga/isup.php
+      (( ret |= $? ))
     done
+    return "$ret"
   else
-    silent ping -c 1 www.google.com && echo "You're online" || { echo "You're not online"; ret=1; }
+    ping -c 1 www.google.com > /dev/null 2>&1
   fi
-  return $ret
 }
 
 myip () { curl icanhazip.com; }
