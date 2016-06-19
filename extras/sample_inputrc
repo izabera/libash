@@ -49,3 +49,7 @@ set bind-tty-special-chars off
 
 # hate this
 set revert-all-at-newline on
+
+set keymap vi-command
+"H":shell-backward-word
+"L":shell-forward-word

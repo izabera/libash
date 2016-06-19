@@ -113,9 +113,9 @@ fi
 
 make () {
   if [[ $1 = install ]]; then
-    sudo make -j "$@"
+    sudo make "$@"
   else
-    command make -j "$@"
+    command make "$@"
   fi
 }
 

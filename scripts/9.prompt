@@ -119,6 +119,7 @@ fi
 # use a function to avoid calling the DEBUG trap more than once
 PROMPT_COMMAND=prompt_command
 prompt_command () {
+  [[ $TERM = sun-color ]] && return
   # yay patchwork coding
   local old=$(stty -g)                                              # from lhunath
   stty raw                                                          # from lhunath
@@ -141,7 +142,7 @@ prompt_command () {
     execution_time= debug_trap=0
     local pattern cmd time=1
     if (( ${#do_not_time[@]} )); then
-      read -r _ cmd < <(history 1)
+      cmd=$(history 1) cmd=${cmd#???????}
 
       # HISTCONTROL kinda messes this up
       for pattern in "${do_not_time[@]}"; do
