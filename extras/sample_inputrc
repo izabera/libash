@@ -1,4 +1,6 @@
+set colored-completion-prefix on
 set completion-ignore-case on
+set mark-symlinked-directories on
 set bell-style none
 set colored-stats on
 set match-hidden-files off

@@ -231,7 +231,8 @@ isup () {
   fi
 }
 
-myip () { curl icanhazip.com; }
+myip () { curl -s icanhazip.com; }
+geo () { curl -s "ipinfo.io/$1/$2"; }
 
 # create a clean temp dir
 #tempdir () { cd -- "$(mktemp -d ${1+-p "$1"})"; }

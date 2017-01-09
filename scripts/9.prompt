@@ -42,7 +42,7 @@ else
     for i in "${!_colors[@]}"; do
       printf "_colors[%s]=%q\n" "$i" "${_colors[i]}"
     done
-    printf "_hostcolor=%s\n" "$(( _hostcolor = (64#${HOSTNAME//[!a-zA-Z_@]} & (~0^(1<<63))) % 6 + 1 ))"
+    printf "_hostcolor=%s\n" "$(( _hostcolor = ( 64#9876543210${HOSTNAME//[!0-9a-zA-Z_@]/_} ** 2 & ((1<<63) -1)) % 6 + 1 ))"
   } > "$HOME/.config/libash/colors-$TERM"
 fi
 
@@ -118,8 +118,8 @@ fi
 
 # use a function to avoid calling the DEBUG trap more than once
 PROMPT_COMMAND=prompt_command
+[[ $TERM = sun-color ]] && return
 prompt_command () {
-  [[ $TERM = sun-color ]] && return
   # yay patchwork coding
   local old=$(stty -g)                                              # from lhunath
   stty raw                                                          # from lhunath
@@ -127,10 +127,7 @@ prompt_command () {
   # ask the tty the cursor position, if possible (i.e. the user didn't type anything)
   if ! read -t 0 < /dev/tty; then                                   # from lhunath
     local row col
-    stty -echo                                                      # from koala_man
-    printf '\e[6n' > /dev/tty                                       # from lhunath
-    IFS='[;' read -dR _ row col < /dev/tty                          # from lhunath
-    stty echo                                                       # from koala_man
+    IFS='[;' read -sdR -p $'\e[6n' _ row col < /dev/tty             # from sirjaren
     (( col != 1 )) && printf "%s$%s\r\n" "$_blue" "$_no_color"
   else
     printf "%s$%s%*s\r" "$_red" "$_no_color" "$((COLUMNS-1))"       # from kurahaupo
@@ -138,8 +135,9 @@ prompt_command () {
   stty "$old"                                                       # from lhunath
 
   collapsed_wd
-  if (( time_in_prompt )); then
-    execution_time= debug_trap=0
+  execution_time=
+  if (( time_in_prompt && !time_start++ )); then
+    debug_trap=0
     local pattern cmd time=1
     if (( ${#do_not_time[@]} )); then
       cmd=$(history 1) cmd=${cmd#???????}
@@ -177,4 +175,8 @@ prompt_command () {
   #undefC-cC-z
 }
 
-trap '((time_in_prompt && !debug_trap++))&&SECONDS=0' debug
+if (( BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 4 )); then
+  PS0='${__PS0[SECONDS=0,time_start=0]}'
+else
+  trap '((time_in_prompt && !debug_trap++))&&SECONDS=0' debug
+fi
