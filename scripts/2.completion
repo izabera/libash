@@ -66,8 +66,8 @@ _vim () {
       return ;;
     '~') path=$HOME/
       set "$1" "~/" "$3" ;;
-    '~/'*) read -N0 path < <(printf %s "${2/$tilde/$HOME}");;
-    *) read -N0 path < <(printf %s "$2");;
+    '~/'*) read -d '' path < <(printf %s "${2/$tilde/$HOME}");;
+    *) read -d '' path < <(printf %s "$2");;
   esac
   compopt -o plusdirs -o filenames
   # read filename
