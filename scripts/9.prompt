@@ -175,7 +175,7 @@ prompt_command () {
   #undefC-cC-z
 }
 
-if (( BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 4 )); then
+if (( BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0]== 4 && BASH_VERSINFO[1] >= 4) )); then
   PS0='${__PS0[SECONDS=0,time_start=0]}'
 else
   trap '((time_in_prompt && !debug_trap++))&&SECONDS=0' debug
