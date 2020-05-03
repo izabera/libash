@@ -60,7 +60,7 @@ if [[ -e ~/.inputrc ]]; then
     S|s) msg "Installing keybindings" SKIP
   esac
 else
-  if ln -s "$PWD/extra/inputrc" ~/.inputrc; then
+  if ln -s "$PWD/extra/sample_inputrc" ~/.inputrc; then
     msg "Installing keybindings" OK
   else
     msg "Installing keybindings" FAIL
